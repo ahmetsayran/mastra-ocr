@@ -54,6 +54,16 @@ bun run prisma generate
 cd ../..
 ```
 
+### Adım 5: OpenRouter Anahtarını Ekleyin
+Belgeleri okuyan yapay zekâ modeline (**NVIDIA Nemotron 3.5 Super VL**, ücretsiz sürüm) [OpenRouter](https://openrouter.ai) üzerinden bağlanıyoruz. Bunun için bir anahtar gerekiyor:
+
+1. [openrouter.ai](https://openrouter.ai) adresinde hesap açıp giriş yapın.
+2. [Keys](https://openrouter.ai/settings/keys) sayfasında **Create API Key** butonuna basın. *(Ücretsiz model kullandığımız için kredi yüklemeniz gerekmez.)*
+3. Oluşan `sk-or-v1-...` ile başlayan anahtarı kopyalayın. *(Anahtar yalnızca bir kez gösterilir.)*
+4. `config/apps/api/.env` dosyasını açıp `OPENROUTER_API_KEY=` satırının sonuna yapıştırın ve kaydedin.
+
+> ⚠️ **Anahtarınızı kimseyle paylaşmayın.** Sadece `.env` dosyasına yazın; bu dosya GitHub'a gönderilmez. `.env.example` dosyasına asla gerçek anahtar yazmayın.
+
 ---
 
 ## 🎬 3. Projeyi Çalıştırma
@@ -67,6 +77,18 @@ bun run dev
 Ekranda birkaç yazı belirecek ve yeşil yazılar göreceksiniz.
 - **Siteye Girmek İçin:** Tarayıcınızda `http://localhost:5173` adresine gidin.
 - (Eğer her şey tamamsa karşınıza giriş ekranı çıkacaktır.)
+
+### 🤖 Yapay Zekâ Panelini (Mastra Studio) Açmak
+Belgeleri okuyan yapay zekâ ajanını ayrıca denemek isterseniz yeni bir terminal açıp şunu yazın:
+
+```bash
+cd apps/api
+bun run mastra:dev
+```
+
+- Tarayıcınızda `http://localhost:4111` adresine gidin.
+- **OCR Agent** adlı ajanı seçip onunla sohbet ederek deneyebilirsiniz.
+- *(Bunun çalışması için Adım 5'teki OpenRouter anahtarının eklenmiş olması gerekir.)*
 
 ---
 
