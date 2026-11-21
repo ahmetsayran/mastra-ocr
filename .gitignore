@@ -31,6 +31,22 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+*.key
+id_rsa*
+.env.keys
+
+# Uploaded files
+/storage/
+
+# Data and logs
+*.sql
+!packages/database/migrations/**/*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+*.log
+logs
 
 # local env files
 .env
