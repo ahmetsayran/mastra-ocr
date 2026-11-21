@@ -1,3 +1,7 @@
 import { Mastra } from '@mastra/core';
 
-export const mastra = new Mastra({});
+import { ocrAgent } from './agents/ocr-agent';
+
+export const mastra = new Mastra({
+  agents: { ocrAgent },
+});
