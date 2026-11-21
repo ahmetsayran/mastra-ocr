@@ -21,6 +21,7 @@ coverage
 output-file.txt
 a-different-file.txt
 dist
+.mastra
 
 # Debug
 npm-debug.log*
