@@ -92,7 +92,27 @@ bun run mastra:dev
 
 ---
 
-## 🚨 4. Hata Çözüm Rehberi (Kurtarıcı Adımlar)
+## 📄 4. Belge Okuma (OCR) Nasıl Çalışır?
+
+Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar; yapay zekâ sadece kayıtlı belgeyi okur.
+
+```
+1) Belgeyi yükle  → POST /file-library-assets   (type: OCR_DOCUMENT)
+                    belge kaydedilir, size bir belge numarası (uuid) döner
+2) Belgeyi okut   → POST /ocr/{uuid}
+                    yapay zekâ belgeyi okur, okunan yazı aynı kayda eklenir
+```
+
+- **Kabul edilen dosyalar:** JPEG, PNG, WEBP (en fazla 10 MB).
+- **Kayıtlar kalıcıdır:** Sayfayı kapatıp açsanız da yüklenen belgeler ve okunan yazılar silinmez.
+- **Giriş gerekir:** Bu işlemler için giriş yapmış ve dosya yetkisi olan bir kullanıcı olmalısınız.
+- **Uç noktaları görmek için:** API çalışırken tarayıcıda `http://localhost:3001/swagger` adresine gidin. *(Ekran henüz yok, sonraki aşamada eklenecek.)*
+
+> 🔒 Yüklenen belgeler proje klasöründeki `storage/` klasörüne kaydedilir. Bu klasör GitHub'a gönderilmez; belgeleriniz sadece kendi bilgisayarınızda kalır.
+
+---
+
+## 🚨 5. Hata Çözüm Rehberi (Kurtarıcı Adımlar)
 
 Eğer projenizi çalıştırırken veya kurarken bir şeyler ters giderse **paniğe kapılmayın**. En çok karşılaşılan sorunları nasıl çözeceğiniz aşağıda:
 
