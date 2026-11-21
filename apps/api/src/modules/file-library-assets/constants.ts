@@ -57,6 +57,14 @@ export const FILE_LIBRARY_ASSET_TYPE_RULES = {
     validationRules: FILE_LIBRARY_ASSET_IMAGE_RULES,
     pathPrefix: ['school-brands', 'logos'],
   },
+  //OCR_DOCUMENT
+  [FileLibraryAssetType.OCR_DOCUMENT]: {
+    validationRules: {
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      maxSize: FILE_LIBRARY_ASSET_IMAGE_RULES.maxSize,
+    },
+    pathPrefix: ['ocr', 'documents'],
+  },
 };
 
 export const normalizeMimeType = (mimeType: string) => {

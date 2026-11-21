@@ -1,25 +1,18 @@
 import { t } from 'elysia';
-import { type ControllerHook, errorResponseDto } from '../../utils';
-import { FILE_LIBRARY_ASSET_IMAGE_RULES } from '../file-library-assets';
-
-export const OCR_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
-
-export const ocrReadInputDto = t.Object({
-  file: t.File({
-    type: [...OCR_ALLOWED_MIME_TYPES],
-    maxSize: FILE_LIBRARY_ASSET_IMAGE_RULES.maxSize,
-  }),
-});
+import { type ControllerHook, errorResponseDto, uuidValidation } from '../../utils';
 
 export const ocrReadResponseDto = t.Object({
+  uuid: t.String(),
   text: t.String(),
 });
 
 export const ocrReadDto = {
-  body: ocrReadInputDto,
-  response: { 200: ocrReadResponseDto, 422: errorResponseDto[422] },
+  params: t.Object({
+    uuid: uuidValidation,
+  }),
+  response: { 200: ocrReadResponseDto, 404: errorResponseDto[404], 422: errorResponseDto[422] },
   detail: {
     summary: 'Read',
-    description: 'Görseldeki metni okur',
+    description: 'Yüklenmiş OCR belgesindeki metni okur',
   },
 } satisfies ControllerHook;
