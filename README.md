@@ -1,6 +1,28 @@
 # 🚀 Proje Başlangıç Rehberi
 
+Bu proje, yüklenen belge görsellerini (fatura, fiş, form gibi) yapay zekâ ile okuyan bir **OCR** (belgeden yazı okuma) uygulamasıdır. Hazır bir proje altyapısının (boilerplate) üzerine kurulmuştur: giriş, yetki, dosya kütüphanesi ve yönetim paneli bu altyapıdan gelir, belge okuma bunlara eklenmiştir.
+
 Bu rehber, hiç kodlama veya proje kurulumu tecrübesi olmayan kişiler için en basit ve anlaşılır haliyle hazırlanmıştır. Lütfen adımları sırayla, atlamadan takip edin.
+
+---
+
+## 🗺️ Yol Haritası
+
+Proje aşama aşama geliştiriliyor. Her aşama bittiğinde bu liste güncellenir.
+
+**✅ Tamamlananlar**
+1. **Altyapı:** API, yönetim paneli ve veritabanı çalışır halde.
+2. **Yapay zekâ bağlantısı:** Mastra ile bir OCR ajanı kuruldu. Model: NVIDIA Nemotron 3.5 Super VL (OpenRouter üzerinden, ücretsiz).
+3. **Belge yükleme:** Dosya kütüphanesine yeni bir belge türü (`OCR_DOCUMENT`) eklendi. Belgeler kalıcı olarak kaydediliyor.
+4. **Belge okuma:** Kayıtlı belge yapay zekâya okutuluyor, okunan yazı aynı kayda ekleniyor. Panelde **Read Text** butonu var.
+5. **Sonucu görme:** Okunan yazı paneldeki belge penceresinde görünüyor.
+
+**⏳ Sıradakiler**
+- Belgeden bilgi ayıklama (örneğin faturadan tarih, tutar, numara alıp düzenli veri olarak kaydetme)
+- Belge özeti çıkarma
+- PDF belge desteği
+
+**💡 İleride eklenebilecekler:** belge türünü tanıma, okunan bilgiyi doğrulama, sonucu düzeltebilme ekranı, şablon yönetimi, işlem geçmişi.
 
 ---
 
@@ -28,7 +50,11 @@ Projeyi bilgisayarınızda çalıştırabilmeniz için ilk olarak şu programlar
 ## 📦 2. Adım Adım Kurulum
 
 ### Adım 1: Projeyi Bilgisayarınıza İndirin
-cd <projenin-klasor-ismi>
+Terminali açıp şunları sırayla yazın:
+```bash
+git clone https://github.com/ahmetsayran/mastra-ocr.git
+cd mastra-ocr
+```
 
 ### Adım 2: Gerekli Paketleri Yükleyin
 Projemizin çalışması için internetteki bazı paketlere ihtiyacı var. Bunları tek bir komutla çekiyoruz:
@@ -107,7 +133,7 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 - **Kayıtlar kalıcıdır:** Sayfayı kapatıp açsanız da yüklenen belgeler ve okunan yazılar silinmez.
 - **Giriş gerekir:** Bu işlemler için giriş yapmış ve dosya yetkisi olan bir kullanıcı olmalısınız.
 - **Panelden kullanmak için:** Paneldeki **File Library** sayfasında **Upload File** ile dosya yüklerken türü **OCR_DOCUMENT** seçin. Satırın menüsünden **View** ile belgeyi açıp **Read Text** butonuna basın. Okuma bitince bildirim çıkar ve okunan yazı aynı pencerede **Read Text** başlığının altında görünür. Daha önce okunmuş bir belgeyi açtığınızda yazı orada durur; henüz okunmamışsa *Not read yet* yazar.
-- **Uç noktaları görmek için:** API çalışırken tarayıcıda `http://localhost:3001/swagger` adresine gidin.
+- **Uç noktaları görmek için:** API çalışırken tarayıcıda `http://localhost:3000/swagger` adresine gidin. *(`config/apps/api/.env` dosyasında `PORT` değerini değiştirdiyseniz 3000 yerine o sayıyı yazın.)*
 
 > 🔒 Yüklenen belgeler proje klasöründeki `storage/` klasörüne kaydedilir. Bu klasör GitHub'a gönderilmez; belgeleriniz sadece kendi bilgisayarınızda kalır.
 
@@ -124,14 +150,14 @@ Projenin ana klasöründeyken terminalde şunları yazarak temizleyip baştan y�
 **Mac/Linux için:**
 ```bash
 rm -rf node_modules
-rm bun.lockb
+rm bun.lock
 bun install
 ```
 
 **Windows (PowerShell) için:**
 ```bash
 Remove-Item -Recurse -Force node_modules
-Remove-Item -Force bun.lockb
+Remove-Item -Force bun.lock
 bun install
 ```
 *(Bu komutlar eski bozuk kurulumu silerek `bun install` ile en temiz haliyle tekrar yükler.)*
