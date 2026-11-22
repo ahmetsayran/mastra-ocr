@@ -1,9 +1,10 @@
 import fs from 'fs';
 import { FileLibraryAssetType } from '@onlyjs/db/client';
-import { getStoragePath } from '../../core';
-import { mastra } from '../../mastra';
-import { UnprocessableEntityException } from '../../utils';
-import { FileLibraryAssetFormatter, FileLibraryAssetsService } from '../file-library-assets';
+import { getStoragePath } from '../../../core';
+import { mastra } from '../../../mastra';
+import { UnprocessableEntityException } from '../../../utils';
+import { FileLibraryAssetFormatter } from '../formatters';
+import { FileLibraryAssetsService } from '../service';
 
 const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 

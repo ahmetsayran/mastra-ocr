@@ -101,7 +101,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
   // ====================================================================
   const ocrReadMutation = useMutation({
     mutationFn: async (uuid: string) => {
-      const response = await api.ocr({ uuid }).post();
+      const response = await api['file-library-assets']({ uuid }).ocr.post();
 
       if (response.error) {
         throw new Error('Failed to read file library asset');

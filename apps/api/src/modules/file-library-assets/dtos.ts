@@ -89,3 +89,16 @@ export const fileLibraryAssetDestroyDto = {
     description: 'Dosyayı siler',
   },
 } satisfies ControllerHook;
+
+export const fileLibraryAssetOcrDto = {
+  ...fileLibraryAssetShowDto,
+  response: {
+    200: fileLibraryAssetResponseDto,
+    404: errorResponseDto[404],
+    422: errorResponseDto[422],
+  },
+  detail: {
+    summary: 'OCR',
+    description: 'Yüklenmiş OCR belgesindeki metni okur',
+  },
+} satisfies ControllerHook;

@@ -7,11 +7,13 @@ import {
   fileLibraryAssetCreateDto,
   fileLibraryAssetDestroyDto,
   fileLibraryAssetIndexDto,
+  fileLibraryAssetOcrDto,
   fileLibraryAssetShowDto,
   fileLibraryAssetUpdateDto,
 } from './dtos';
 import { FileLibraryAssetFormatter } from './formatters';
 import { FileLibraryAssetsService } from './service';
+import { OcrService } from './services/ocr.service';
 
 const fileLibraryAssetsController = new Elysia({
   tags: ['FileLibraryAsset'],
@@ -106,10 +108,32 @@ const fileLibraryAssetsController = new Elysia({
     ),
   );
 
+const fileLibraryAssetOcrController = new Elysia({
+  tags: ['FileLibraryAsset'],
+})
+  .use(auth())
+  .post(
+    '/:uuid/ocr',
+    async ({ params }) => OcrService.read(params.uuid),
+    dtoWithMiddlewares(
+      fileLibraryAssetOcrDto,
+      withPermission(PERMISSIONS.FILE_LIBRARY_ASSETS.UPDATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.FILE_LIBRARY_ASSET,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => {
+          return 'OCR ile metin okundu';
+        },
+      }),
+    ),
+  );
+
 const app = new Elysia({
   prefix: '/file-library-assets',
 })
   // add other file library related controllers here
-  .use(fileLibraryAssetsController);
+  .use(fileLibraryAssetsController)
+  .use(fileLibraryAssetOcrController);
 
 export default app;
