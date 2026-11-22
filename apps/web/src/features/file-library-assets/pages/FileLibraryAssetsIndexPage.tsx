@@ -79,6 +79,8 @@ export default function FileLibraryAssetsIndexPage() {
     isUpdating,
     deleteFileLibraryAsset,
     isDeleting,
+    readFileLibraryAsset,
+    isReading,
   } = useFileLibraryAssets({
     name: debouncedSearch || undefined,
     page: pagination.pageIndex + 1,
@@ -119,6 +121,10 @@ export default function FileLibraryAssetsIndexPage() {
 
   const handleConfirmDelete = async (uuid: string) => {
     await deleteFileLibraryAsset(uuid);
+  };
+
+  const handleRead = async (uuid: string) => {
+    await readFileLibraryAsset(uuid);
   };
 
   // Reset filters
@@ -251,6 +257,8 @@ export default function FileLibraryAssetsIndexPage() {
           open={viewModalOpen}
           onOpenChange={setViewModalOpen}
           asset={selectedAsset}
+          onRead={handleRead}
+          isReading={isReading}
         />
       </div>
     </PageContainer>

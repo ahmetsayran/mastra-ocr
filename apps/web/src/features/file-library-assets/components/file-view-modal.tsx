@@ -8,12 +8,14 @@ import {
 } from '#/components/ui/dialog';
 import { env } from '#/config/env';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
-import { Download, ExternalLink, FileImage, FileText, FileVideo } from 'lucide-react';
+import { Download, ExternalLink, FileImage, FileText, FileVideo, ScanText } from 'lucide-react';
 
 interface FileViewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   asset: FileLibraryAssetShowResponse | null;
+  onRead: (uuid: string) => Promise<void>;
+  isReading: boolean;
 }
 
 function formatFileSize(sizeStr: string): string {
@@ -59,12 +61,15 @@ export function FileViewModal({
   open,
   onOpenChange,
   asset,
+  onRead,
+  isReading,
 }: FileViewModalProps) {
   if (!asset) return null;
 
   const fileUrl = `${env.apiUrl}/storage/${asset.path}`;
   const isImage = asset.fileType === 'IMAGE';
   const isVideo = asset.fileType === 'VIDEO';
+  const isOcrDocument = asset.type === 'OCR_DOCUMENT';
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -163,6 +168,21 @@ export function FileViewModal({
 
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-4 border-t">
+          {isOcrDocument && (
+            <Button variant="outline" onClick={() => onRead(asset.uuid)} disabled={isReading}>
+              {isReading ? (
+                <>
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                  Reading...
+                </>
+              ) : (
+                <>
+                  <ScanText className="w-4 h-4 mr-2" />
+                  Read Text
+                </>
+              )}
+            </Button>
+          )}
           <Button variant="outline" onClick={handleOpenInNewTab}>
             <ExternalLink className="w-4 h-4 mr-2" />
             Open

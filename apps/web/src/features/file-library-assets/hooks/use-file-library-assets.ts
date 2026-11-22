@@ -95,6 +95,25 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     },
   });
 
+  // ====================================================================
+  // 🔍 OCR READ MUTATION
+  // ====================================================================
+  const ocrReadMutation = useMutation({
+    mutationFn: async (uuid: string) => {
+      const response = await api.ocr({ uuid }).post();
+
+      if (response.error) {
+        throw new Error('Failed to read file library asset');
+      }
+
+      return response.data;
+    },
+    onSuccess: (_, uuid) => {
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+    },
+  });
+
   return {
     // State
     fileLibraryAssets: fileLibraryAssetsResponse?.data,
@@ -117,5 +136,9 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     deleteFileLibraryAsset: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
     deleteError: deleteMutation.error,
+
+    readFileLibraryAsset: ocrReadMutation.mutateAsync,
+    isReading: ocrReadMutation.isPending,
+    readError: ocrReadMutation.error,
   };
 }
