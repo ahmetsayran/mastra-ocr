@@ -31,6 +31,11 @@ export const FILE_LIBRARY_ASSET_DOCUMENT_RULES = {
   maxSize: 50 * 1024 * 1024, // 50MB
 };
 
+export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  maxSize: 10 * 1024 * 1024, // 10MB
+};
+
 export const FILE_LIBRARY_ASSET_TYPE_RULES = {
   //PRODUCT_IMAGE
   [FileLibraryAssetType.PRODUCT_IMAGE]: {
@@ -59,10 +64,7 @@ export const FILE_LIBRARY_ASSET_TYPE_RULES = {
   },
   //OCR_DOCUMENT
   [FileLibraryAssetType.OCR_DOCUMENT]: {
-    validationRules: {
-      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      maxSize: FILE_LIBRARY_ASSET_IMAGE_RULES.maxSize,
-    },
+    validationRules: FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES,
     pathPrefix: ['ocr', 'documents'],
   },
 };

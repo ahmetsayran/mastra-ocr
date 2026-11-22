@@ -2,6 +2,7 @@ import { api } from '#/lib/api';
 import type { FileLibraryAssetIndexQuery } from '#backend/modules/file-library-assets/types';
 import { FileLibraryAssetType } from '@onlyjs/db/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { fileLibraryAssetKeys, fileLibraryAssetsListQueryOptions } from '../queries/file-library-asset-queries';
 
 // ====================================================================
@@ -111,6 +112,11 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, uuid) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+      toast.success('Text read successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to read file library asset:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to read file library asset');
     },
   });
 

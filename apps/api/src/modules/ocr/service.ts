@@ -1,8 +1,9 @@
+import fs from 'fs';
 import { FileLibraryAssetType } from '@onlyjs/db/client';
 import { getStoragePath } from '../../core';
 import { mastra } from '../../mastra';
 import { UnprocessableEntityException } from '../../utils';
-import { FileLibraryAssetsService } from '../file-library-assets';
+import { FileLibraryAssetFormatter, FileLibraryAssetsService } from '../file-library-assets';
 
 const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 
@@ -13,8 +14,8 @@ export abstract class OcrService {
       throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
     }
 
-    const file = Bun.file(getStoragePath(asset.path));
-    const image = new Uint8Array(await file.arrayBuffer());
+    const image = await fs.promises.readFile(getStoragePath(asset.path));
+    const mimeType = asset.mimeType.replace('_', '/').toLowerCase();
 
     const agent = mastra.getAgent('ocrAgent');
     const result = await agent.generate([
@@ -22,13 +23,15 @@ export abstract class OcrService {
         role: 'user',
         content: [
           { type: 'text', text: READ_PROMPT },
-          { type: 'image', image, mimeType: file.type },
+          { type: 'image', image, mimeType },
         ],
       },
     ]);
 
-    await FileLibraryAssetsService.update(uuid, { metadata: { text: result.text } });
+    const updatedAsset = await FileLibraryAssetsService.update(uuid, {
+      metadata: { text: result.text },
+    });
 
-    return { uuid, text: result.text };
+    return FileLibraryAssetFormatter.response(updatedAsset);
   }
 }
