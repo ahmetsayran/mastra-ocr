@@ -124,7 +124,8 @@ export default function FileLibraryAssetsIndexPage() {
   };
 
   const handleRead = async (uuid: string) => {
-    await readFileLibraryAsset(uuid);
+    const updatedAsset = await readFileLibraryAsset(uuid);
+    setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
   };
 
   // Reset filters

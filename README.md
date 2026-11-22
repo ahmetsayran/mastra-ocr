@@ -106,7 +106,7 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 - **Kabul edilen dosyalar:** JPEG, PNG, WEBP (en fazla 10 MB).
 - **Kayıtlar kalıcıdır:** Sayfayı kapatıp açsanız da yüklenen belgeler ve okunan yazılar silinmez.
 - **Giriş gerekir:** Bu işlemler için giriş yapmış ve dosya yetkisi olan bir kullanıcı olmalısınız.
-- **Panelden kullanmak için:** Paneldeki **File Library** sayfasında **Upload File** ile dosya yüklerken türü **OCR_DOCUMENT** seçin. Satırın menüsünden **View** ile belgeyi açıp **Read Text** butonuna basın; okuma bitince bildirim görünür.
+- **Panelden kullanmak için:** Paneldeki **File Library** sayfasında **Upload File** ile dosya yüklerken türü **OCR_DOCUMENT** seçin. Satırın menüsünden **View** ile belgeyi açıp **Read Text** butonuna basın. Okuma bitince bildirim çıkar ve okunan yazı aynı pencerede **Read Text** başlığının altında görünür. Daha önce okunmuş bir belgeyi açtığınızda yazı orada durur; henüz okunmamışsa *Not read yet* yazar.
 - **Uç noktaları görmek için:** API çalışırken tarayıcıda `http://localhost:3001/swagger` adresine gidin.
 
 > 🔒 Yüklenen belgeler proje klasöründeki `storage/` klasörüne kaydedilir. Bu klasör GitHub'a gönderilmez; belgeleriniz sadece kendi bilgisayarınızda kalır.

@@ -70,6 +70,7 @@ export function FileViewModal({
   const isImage = asset.fileType === 'IMAGE';
   const isVideo = asset.fileType === 'VIDEO';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
+  const ocrText: string | undefined = asset.metadata?.text;
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -164,6 +165,18 @@ export function FileViewModal({
               </p>
             </div>
           </div>
+
+          {/* OCR Text */}
+          {isOcrDocument && (
+            <div className="text-sm">
+              <p className="text-muted-foreground mb-1">Read Text</p>
+              {ocrText ? (
+                <p className="bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">{ocrText}</p>
+              ) : (
+                <p className="text-muted-foreground italic">Not read yet</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
