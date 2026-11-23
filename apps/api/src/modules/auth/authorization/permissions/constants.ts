@@ -404,6 +404,21 @@ export const PERMISSIONS = {
       hiddenOn: true,
     },
   },
+  // ====================================================================
+  // 💬 AI CHAT
+  // ====================================================================
+  CHAT_THREADS: {
+    SHOW: {
+      key: 'chat-threads:show',
+      description: 'Sohbetleri Görüntüle',
+      scopes: [GLOBAL],
+    },
+    CREATE: {
+      key: 'chat-threads:create',
+      description: 'Sohbet Oluştur ve Mesaj Gönder',
+      scopes: [GLOBAL],
+    },
+  },
 } as const satisfies Record<string, Record<string, GenericPermissionObject>>;
 
 export const PERMISSION_KEYS = [
@@ -516,6 +531,15 @@ export const PERMISSION_GROUPS = {
     key: 'file-library-assets',
     description: 'Dosya Yönetimi',
     permissions: Object.values(PERMISSIONS.FILE_LIBRARY_ASSETS),
+  },
+
+  // ====================================================================
+  // 💬 AI CHAT
+  // ====================================================================
+  CHAT_THREADS: {
+    key: 'chat-threads',
+    description: 'Yapay Zekâ Sohbetleri',
+    permissions: Object.values(PERMISSIONS.CHAT_THREADS),
   },
 } as const satisfies Record<
   string,

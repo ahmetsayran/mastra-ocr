@@ -170,6 +170,7 @@ model User {
   company         Company[]        @relation("CompanyToOwner")
   CompanyMember   CompanyMember[]  @relation("UserToCompanyMember")
   projects        Project[]        @relation("ProjectToUser")
+  chatThreads     ChatThread[]     @relation("ChatThreadToUser")
 
   @@index([deletedAt])
   @@index([scope])
@@ -695,4 +696,56 @@ model Project {
   @@index([status])
   @@index([deletedAt])
   @@map("projects")
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+
+  @@map("chat_message_role")
+}
+
+model ChatThread {
+  /// @prismabox.hide
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid())
+
+  /// @prismabox.options{minLength:1,maxLength:255}
+  title String @db.VarChar(255)
+
+  // Thread owner (Mastra resourceId = userId)
+  resource   User   @relation("ChatThreadToUser", fields: [resourceId], references: [id], onDelete: Cascade)
+  /// @prismabox.hide
+  resourceId String @map("resource_id")
+
+  messages ChatMessage[] @relation("ChatMessageToChatThread")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  /// @prismabox.input.hide
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([resourceId])
+  @@index([deletedAt])
+  @@map("chat_threads")
+}
+
+model ChatMessage {
+  /// @prismabox.hide
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid())
+
+  thread   ChatThread @relation("ChatMessageToChatThread", fields: [threadId], references: [id], onDelete: Cascade)
+  /// @prismabox.hide
+  threadId Int        @map("thread_id")
+
+  role ChatMessageRole
+
+  /// @prismabox.options{minLength:1}
+  content String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([threadId])
+  @@map("chat_messages")
 }
