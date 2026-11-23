@@ -23,9 +23,14 @@ const EXTRACT_PROMPT =
   'Belgede gerçekten olmayan bilgi için null yaz.';
 
 export abstract class OcrService {
-  private static handleAgentError(error: unknown, context: 'read' | 'extract'): never {
+  private static async handleAgentError(error: unknown, context: 'read' | 'extract') {
+    // FileLibraryAssetsService errors arrive as rejected promises
+    if (error instanceof Promise) {
+      error = await error.catch((rejection: unknown) => rejection);
+    }
+
     if (error instanceof HttpError) {
-      throw error;
+      return error;
     }
 
     console.error(`Error in OcrService.${context}:`, error);
@@ -36,16 +41,16 @@ export abstract class OcrService {
         : undefined;
 
     if (statusCode === 429) {
-      throw new TooManyRequestsException(
+      return new TooManyRequestsException(
         'Yapay zekâ servisi şu an yoğun, biraz sonra tekrar deneyin',
       );
     }
     if (statusCode === 401 || statusCode === 402 || statusCode === 403) {
-      throw new ServiceUnavailableException(
+      return new ServiceUnavailableException(
         'Yapay zekâ servisine bağlanılamadı, OpenRouter anahtarını kontrol edin',
       );
     }
-    throw new BadGatewayException('Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin');
+    return new BadGatewayException('Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin');
   }
 
   private static async loadDocument(uuid: string) {
@@ -82,7 +87,7 @@ export abstract class OcrService {
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw this.handleAgentError(error, 'read');
+      throw await this.handleAgentError(error, 'read');
     }
   }
 
@@ -115,7 +120,7 @@ export abstract class OcrService {
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw this.handleAgentError(error, 'extract');
+      throw await this.handleAgentError(error, 'extract');
     }
   }
 }
