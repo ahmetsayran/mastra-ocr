@@ -104,7 +104,12 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       const response = await api['file-library-assets']({ uuid }).ocr.post();
 
       if (response.error) {
-        throw new Error('Failed to read file library asset');
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : 'Failed to read file library asset';
+        throw new Error(errorMessage);
       }
 
       return response.data;
@@ -128,7 +133,12 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       const response = await api['file-library-assets']({ uuid }).extract.post();
 
       if (response.error) {
-        throw new Error('Failed to extract file library asset data');
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : 'Failed to extract file library asset data';
+        throw new Error(errorMessage);
       }
 
       return response.data;

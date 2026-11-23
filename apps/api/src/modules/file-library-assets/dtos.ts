@@ -96,6 +96,9 @@ export const fileLibraryAssetOcrDto = {
     200: fileLibraryAssetResponseDto,
     404: errorResponseDto[404],
     422: errorResponseDto[422],
+    429: errorResponseDto[429],
+    502: errorResponseDto[502],
+    503: errorResponseDto[503],
   },
   detail: {
     summary: 'OCR',
