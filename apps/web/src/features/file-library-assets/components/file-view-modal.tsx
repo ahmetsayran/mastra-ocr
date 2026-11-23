@@ -8,7 +8,15 @@ import {
 } from '#/components/ui/dialog';
 import { env } from '#/config/env';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
-import { Download, ExternalLink, FileImage, FileText, FileVideo, ScanText } from 'lucide-react';
+import {
+  Download,
+  ExternalLink,
+  FileImage,
+  FileText,
+  FileVideo,
+  Receipt,
+  ScanText,
+} from 'lucide-react';
 
 interface FileViewModalProps {
   open: boolean;
@@ -16,6 +24,26 @@ interface FileViewModalProps {
   asset: FileLibraryAssetShowResponse | null;
   onRead: (uuid: string) => Promise<void>;
   isReading: boolean;
+  onExtract: (uuid: string) => Promise<void>;
+  isExtracting: boolean;
+}
+
+const INVOICE_FIELDS = [
+  { key: 'invoiceNumber', label: 'Invoice No' },
+  { key: 'invoiceDate', label: 'Date' },
+  { key: 'sellerName', label: 'Seller' },
+  { key: 'buyerName', label: 'Buyer' },
+  { key: 'subtotal', label: 'Subtotal' },
+  { key: 'taxAmount', label: 'VAT' },
+  { key: 'totalAmount', label: 'Total' },
+  { key: 'currency', label: 'Currency' },
+];
+
+// The API client turns date-like strings (e.g. "2026-11-15") into Date objects
+function formatInvoiceValue(value: string | number | Date | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value);
 }
 
 function formatFileSize(sizeStr: string): string {
@@ -63,6 +91,8 @@ export function FileViewModal({
   asset,
   onRead,
   isReading,
+  onExtract,
+  isExtracting,
 }: FileViewModalProps) {
   if (!asset) return null;
 
@@ -71,6 +101,8 @@ export function FileViewModal({
   const isVideo = asset.fileType === 'VIDEO';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
+  const invoice: Record<string, string | number | Date | null> | undefined =
+    asset.metadata?.invoice;
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -177,6 +209,27 @@ export function FileViewModal({
               )}
             </div>
           )}
+
+          {/* OCR Invoice Data */}
+          {isOcrDocument && (
+            <div className="text-sm">
+              <p className="text-muted-foreground mb-1">Invoice Data</p>
+              {invoice ? (
+                <div className="grid grid-cols-2 gap-4 bg-muted rounded-lg p-3">
+                  {INVOICE_FIELDS.map((field) => (
+                    <div key={field.key}>
+                      <p className="text-muted-foreground">{field.label}</p>
+                      <p className="font-medium break-words">
+                        {formatInvoiceValue(invoice[field.key])}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic">Not extracted yet</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -192,6 +245,21 @@ export function FileViewModal({
                 <>
                   <ScanText className="w-4 h-4 mr-2" />
                   Read Text
+                </>
+              )}
+            </Button>
+          )}
+          {isOcrDocument && (
+            <Button variant="outline" onClick={() => onExtract(asset.uuid)} disabled={isExtracting}>
+              {isExtracting ? (
+                <>
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  <Receipt className="w-4 h-4 mr-2" />
+                  Extract Data
                 </>
               )}
             </Button>

@@ -16,9 +16,9 @@ Proje aşama aşama geliştiriliyor. Her aşama bittiğinde bu liste güncelleni
 3. **Belge yükleme:** Dosya kütüphanesine yeni bir belge türü (`OCR_DOCUMENT`) eklendi. Belgeler kalıcı olarak kaydediliyor.
 4. **Belge okuma:** Kayıtlı belge yapay zekâya okutuluyor, okunan yazı aynı kayda ekleniyor. Panelde **Read Text** butonu var.
 5. **Sonucu görme:** Okunan yazı paneldeki belge penceresinde görünüyor.
+6. **Bilgi ayıklama:** Faturadan fatura no, tarih, satıcı, alıcı, ara toplam, KDV, genel toplam ve para birimi ayrı ayrı alınıp düzenli veri (JSON) olarak kaydediliyor. Panelde **Extract Data** butonu var.
 
 **⏳ Sıradakiler**
-- Belgeden bilgi ayıklama (örneğin faturadan tarih, tutar, numara alıp düzenli veri olarak kaydetme)
 - Belge özeti çıkarma
 - PDF belge desteği
 
@@ -127,12 +127,18 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
                     belge kaydedilir, size bir belge numarası (uuid) döner
 2) Belgeyi okut   → POST /file-library-assets/{uuid}/ocr
                     yapay zekâ belgeyi okur, okunan yazı aynı kayda eklenir
+3) Bilgi ayıkla   → POST /file-library-assets/{uuid}/extract
+                    yapay zekâ fatura bilgilerini tek tek ayıklar, aynı kayda eklenir
 ```
+
+2. ve 3. adım birbirinden bağımsızdır; istediğiniz sırayla, istediğiniz kadar çalıştırabilirsiniz. Biri diğerinin sonucunu silmez.
+
+**Ayıklanan fatura bilgileri:** fatura no, tarih, satıcı, alıcı, ara toplam (KDV hariç), KDV, genel toplam, para birimi. Belgede yazmayan bilgi boş bırakılır. Tutarlar düz sayı (`1.440,00 TL` → `1440`), tarih `YYYY-MM-DD` biçiminde kaydedilir.
 
 - **Kabul edilen dosyalar:** JPEG, PNG, WEBP (en fazla 10 MB).
 - **Kayıtlar kalıcıdır:** Sayfayı kapatıp açsanız da yüklenen belgeler ve okunan yazılar silinmez.
 - **Giriş gerekir:** Bu işlemler için giriş yapmış ve dosya yetkisi olan bir kullanıcı olmalısınız.
-- **Panelden kullanmak için:** Paneldeki **File Library** sayfasında **Upload File** ile dosya yüklerken türü **OCR_DOCUMENT** seçin. Satırın menüsünden **View** ile belgeyi açıp **Read Text** butonuna basın. Okuma bitince bildirim çıkar ve okunan yazı aynı pencerede **Read Text** başlığının altında görünür. Daha önce okunmuş bir belgeyi açtığınızda yazı orada durur; henüz okunmamışsa *Not read yet* yazar.
+- **Panelden kullanmak için:** Paneldeki **File Library** sayfasında **Upload File** ile dosya yüklerken türü **OCR_DOCUMENT** seçin. Satırın menüsünden **View** ile belgeyi açıp **Read Text** butonuna basın. Okuma bitince bildirim çıkar ve okunan yazı aynı pencerede **Read Text** başlığının altında görünür. Daha önce okunmuş bir belgeyi açtığınızda yazı orada durur; henüz okunmamışsa *Not read yet* yazar. Aynı pencerede **Extract Data** butonuna basınca fatura bilgileri **Invoice Data** başlığının altında tek tek görünür; henüz ayıklanmamışsa *Not extracted yet* yazar.
 - **Uç noktaları görmek için:** API çalışırken tarayıcıda `http://localhost:3000/swagger` adresine gidin. *(`config/apps/api/.env` dosyasında `PORT` değerini değiştirdiyseniz 3000 yerine o sayıyı yazın.)*
 
 > 🔒 Yüklenen belgeler proje klasöründeki `storage/` klasörüne kaydedilir. Bu klasör GitHub'a gönderilmez; belgeleriniz sadece kendi bilgisayarınızda kalır.

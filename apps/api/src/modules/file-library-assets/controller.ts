@@ -6,6 +6,7 @@ import { auth, dtoWithPermission, PERMISSIONS, withPermission } from '../auth';
 import {
   fileLibraryAssetCreateDto,
   fileLibraryAssetDestroyDto,
+  fileLibraryAssetExtractDto,
   fileLibraryAssetIndexDto,
   fileLibraryAssetOcrDto,
   fileLibraryAssetShowDto,
@@ -124,6 +125,22 @@ const fileLibraryAssetOcrController = new Elysia({
         getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => {
           return 'OCR ile metin okundu';
+        },
+      }),
+    ),
+  )
+  .post(
+    '/:uuid/extract',
+    async ({ params }) => OcrService.extract(params.uuid),
+    dtoWithMiddlewares(
+      fileLibraryAssetExtractDto,
+      withPermission(PERMISSIONS.FILE_LIBRARY_ASSETS.UPDATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.FILE_LIBRARY_ASSET,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => {
+          return 'OCR ile fatura bilgileri ayıklandı';
         },
       }),
     ),

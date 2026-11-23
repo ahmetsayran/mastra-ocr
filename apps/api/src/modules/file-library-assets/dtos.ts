@@ -102,3 +102,11 @@ export const fileLibraryAssetOcrDto = {
     description: 'Yüklenmiş OCR belgesindeki metni okur',
   },
 } satisfies ControllerHook;
+
+export const fileLibraryAssetExtractDto = {
+  ...fileLibraryAssetOcrDto,
+  detail: {
+    summary: 'Extract',
+    description: 'Yüklenmiş OCR belgesinden fatura bilgilerini ayıklar',
+  },
+} satisfies ControllerHook;

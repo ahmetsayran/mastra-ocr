@@ -81,6 +81,8 @@ export default function FileLibraryAssetsIndexPage() {
     isDeleting,
     readFileLibraryAsset,
     isReading,
+    extractFileLibraryAsset,
+    isExtracting,
   } = useFileLibraryAssets({
     name: debouncedSearch || undefined,
     page: pagination.pageIndex + 1,
@@ -125,6 +127,11 @@ export default function FileLibraryAssetsIndexPage() {
 
   const handleRead = async (uuid: string) => {
     const updatedAsset = await readFileLibraryAsset(uuid);
+    setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
+  };
+
+  const handleExtract = async (uuid: string) => {
+    const updatedAsset = await extractFileLibraryAsset(uuid);
     setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
   };
 
@@ -260,6 +267,8 @@ export default function FileLibraryAssetsIndexPage() {
           asset={selectedAsset}
           onRead={handleRead}
           isReading={isReading}
+          onExtract={handleExtract}
+          isExtracting={isExtracting}
         />
       </div>
     </PageContainer>

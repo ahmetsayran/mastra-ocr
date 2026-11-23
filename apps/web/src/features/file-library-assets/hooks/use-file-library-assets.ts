@@ -120,6 +120,32 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     },
   });
 
+  // ====================================================================
+  // 🧾 OCR EXTRACT MUTATION
+  // ====================================================================
+  const ocrExtractMutation = useMutation({
+    mutationFn: async (uuid: string) => {
+      const response = await api['file-library-assets']({ uuid }).extract.post();
+
+      if (response.error) {
+        throw new Error('Failed to extract file library asset data');
+      }
+
+      return response.data;
+    },
+    onSuccess: (_, uuid) => {
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+      toast.success('Data extracted successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to extract file library asset data:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to extract file library asset data',
+      );
+    },
+  });
+
   return {
     // State
     fileLibraryAssets: fileLibraryAssetsResponse?.data,
@@ -146,5 +172,9 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     readFileLibraryAsset: ocrReadMutation.mutateAsync,
     isReading: ocrReadMutation.isPending,
     readError: ocrReadMutation.error,
+
+    extractFileLibraryAsset: ocrExtractMutation.mutateAsync,
+    isExtracting: ocrExtractMutation.isPending,
+    extractError: ocrExtractMutation.error,
   };
 }
