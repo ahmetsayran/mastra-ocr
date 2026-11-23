@@ -7,7 +7,10 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog';
 import { env } from '#/config/env';
-import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
+import type {
+  FileLibraryAssetOcrInvoice,
+  FileLibraryAssetShowResponse,
+} from '#backend/modules/file-library-assets/types';
 import {
   Download,
   ExternalLink,
@@ -28,7 +31,7 @@ interface FileViewModalProps {
   isExtracting: boolean;
 }
 
-const INVOICE_FIELDS = [
+const INVOICE_FIELDS: { key: keyof FileLibraryAssetOcrInvoice; label: string }[] = [
   { key: 'invoiceNumber', label: 'Invoice No' },
   { key: 'invoiceDate', label: 'Date' },
   { key: 'sellerName', label: 'Seller' },
@@ -101,8 +104,7 @@ export function FileViewModal({
   const isVideo = asset.fileType === 'VIDEO';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
-  const invoice: Record<string, string | number | Date | null> | undefined =
-    asset.metadata?.invoice;
+  const invoice: FileLibraryAssetOcrInvoice | undefined = asset.metadata?.invoice;
 
   const handleDownload = () => {
     const link = document.createElement('a');

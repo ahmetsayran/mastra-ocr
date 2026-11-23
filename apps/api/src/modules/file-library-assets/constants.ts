@@ -2,6 +2,7 @@ import {
     FileLibraryAssetMimeType,
     FileLibraryAssetType,
 } from '@onlyjs/db/client';
+import { z } from 'zod';
 
 export const FILE_LIBRARY_ASSET_IMAGE_RULES = {
   allowedMimeTypes: [
@@ -35,6 +36,17 @@ export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
   allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
   maxSize: 10 * 1024 * 1024, // 10MB
 };
+
+export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
+  invoiceNumber: z.string().nullable().describe('Fatura numarası'),
+  invoiceDate: z.string().nullable().describe('Fatura tarihi, YYYY-MM-DD'),
+  sellerName: z.string().nullable().describe('Satıcı firma veya kişi adı'),
+  buyerName: z.string().nullable().describe('Alıcı firma veya kişi adı'),
+  subtotal: z.number().nullable().describe('KDV hariç ara toplam'),
+  taxAmount: z.number().nullable().describe('KDV tutarı'),
+  totalAmount: z.number().nullable().describe('Genel toplam, ödenecek tutar'),
+  currency: z.string().nullable().describe('Para birimi kodu, örnek TRY'),
+});
 
 export const FILE_LIBRARY_ASSET_TYPE_RULES = {
   //PRODUCT_IMAGE

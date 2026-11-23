@@ -1,9 +1,9 @@
 import fs from 'fs';
 import { FileLibraryAssetType } from '@onlyjs/db/client';
-import { z } from 'zod';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
 import { UnprocessableEntityException } from '../../../utils';
+import { FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import { FileLibraryAssetsService } from '../service';
 
@@ -15,17 +15,6 @@ const EXTRACT_PROMPT =
   'Ara toplamı sadece belgede ayrıca "Ara Toplam" ya da KDV hariç tutar olarak yazıyorsa doldur. ' +
   'Tarihi YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
   'Belgede gerçekten olmayan bilgi için null yaz.';
-
-const invoiceSchema = z.object({
-  invoiceNumber: z.string().nullable().describe('Fatura numarası'),
-  invoiceDate: z.string().nullable().describe('Fatura tarihi, YYYY-MM-DD'),
-  sellerName: z.string().nullable().describe('Satıcı firma veya kişi adı'),
-  buyerName: z.string().nullable().describe('Alıcı firma veya kişi adı'),
-  subtotal: z.number().nullable().describe('KDV hariç ara toplam'),
-  taxAmount: z.number().nullable().describe('KDV tutarı'),
-  totalAmount: z.number().nullable().describe('Genel toplam, ödenecek tutar'),
-  currency: z.string().nullable().describe('Para birimi kodu, örnek TRY'),
-});
 
 export abstract class OcrService {
   private static async loadDocument(uuid: string) {
@@ -76,7 +65,12 @@ export abstract class OcrService {
           ],
         },
       ],
-      { structuredOutput: { schema: invoiceSchema, jsonPromptInjection: 'auto' } },
+      {
+        structuredOutput: {
+          schema: FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
+          jsonPromptInjection: 'auto',
+        },
+      },
     );
 
     const updatedAsset = await FileLibraryAssetsService.update(uuid, {
