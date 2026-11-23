@@ -52,8 +52,8 @@ Projeyi bilgisayarınızda çalıştırabilmeniz için ilk olarak şu programlar
 ### Adım 1: Projeyi Bilgisayarınıza İndirin
 Terminali açıp şunları sırayla yazın:
 ```bash
-git clone https://github.com/ahmetsayran/mastra-ocr.git
-cd mastra-ocr
+git clone <depo-adresi>
+cd <proje-klasoru>
 ```
 
 ### Adım 2: Gerekli Paketleri Yükleyin
@@ -171,22 +171,6 @@ bun install
 ### 💡 "Database Connection" (Veritabanı Bağlantı) Hatası
 - PostgreSQL veritabanını kurduğunuzdan ve arka planda açık olduğundan emin olun.
 - Şifrenizi kurulumda `postgres` yapmadıysanız, `config/apps/api/.env` dosyasına girip oradaki `postgresql://postgres:postgres@localhost...` yazan kısımdaki ikinci `postgres`'i koyduğunuz kendi şifrenizle değiştirin.
-
-### 💡 API'ye yeni bir şey ekledim ama panel onu tanımıyor (tip hatası)
-Panel, API'nin adreslerini ve veri yapılarını önceden üretilmiş bir dosyadan okur (`packages/eden/types.d.ts`). Bu dosya GitHub'a gönderilmez, her bilgisayarda ayrıca üretilir. API'de bir adres veya veri yapısı değiştirdiyseniz (ya da projeyi yeni indirdiyseniz) dosyayı yenileyin:
-```bash
-cd packages/eden
-bun run prepare-types
-cd ../..
-```
-
-Panelin tip kontrolünü yapmak için şunu kullanın:
-```bash
-cd apps/web
-bunx tsc -p tsconfig.app.json --noEmit
-cd ../..
-```
-*(Dikkat: `apps/web` içindeki `bun run tsc` komutu hiçbir dosyayı kontrol etmez, her zaman "hata yok" der. Yukarıdaki komut gerçek kontrolü yapar. Altyapının kendi dosyalarından gelen eski hataları da listeler; bunlar projenin çalışmasını engellemez.)*
 
 ### 💡 "Port 5173 / 3000 is already in use" (Port dolu) Hatası
 Arka planda projeyi zaten çalıştırmışsınız veya başka bir program bu kanalları kullanıyor olabilir. Terminal'i tamamen kapatıp yeni bir terminal açarak tekrar deneyin.
