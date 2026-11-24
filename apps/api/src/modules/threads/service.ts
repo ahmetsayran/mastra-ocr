@@ -2,11 +2,14 @@ import prisma from '@onlyjs/db';
 import { ChatMessageRole } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
 import { mastra } from '../../mastra';
+import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processors/chat-guardrails';
 import {
   BadGatewayException,
+  HttpError,
   NotFoundException,
   ServiceUnavailableException,
   TooManyRequestsException,
+  UnprocessableEntityException,
 } from '../../utils';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
 import type { ThreadCreatePayload, ThreadMessagePayload } from './types';
@@ -23,6 +26,10 @@ export abstract class ThreadsService {
   }
 
   private static handleAgentError(error: unknown): never {
+    if (error instanceof HttpError) {
+      throw error;
+    }
+
     console.error('Error in ThreadsService.generate:', error);
 
     const statusCode =
@@ -104,7 +111,14 @@ export abstract class ThreadsService {
   private static async generate(content: string) {
     try {
       const agent = mastra.getAgent('ocrAgent');
-      const result = await agent.generate(content);
+      const result = await agent.generate(content, {
+        inputProcessors: chatInputProcessors,
+        outputProcessors: chatOutputProcessors,
+      });
+
+      if (result.tripwire) {
+        throw new UnprocessableEntityException('Mesaj güvenlik kontrolüne takıldı');
+      }
       return result.text;
     } catch (error) {
       this.handleAgentError(error);
