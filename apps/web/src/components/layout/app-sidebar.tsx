@@ -1,9 +1,11 @@
 import { CompanySidebar } from '#/components/layout/company-sidebar';
 import { SystemAdminSidebar } from '#/components/layout/system-admin-sidebar';
+import { ChatbotSidebar } from '#/features/ai-chatbot';
 import type { Sidebar } from '#/components/ui/sidebar';
 import { useSidebarType } from '#/hooks/use-sidebar-type';
 import { useSession } from '#/hooks/use-session';
 import { hasSystemScope } from '#/lib/auth';
+import { useLocation } from '@tanstack/react-router';
 
 /**
  * AppSidebar - Dynamic sidebar component
@@ -21,7 +23,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sidebarType } = useSidebarType();
   const { session } = useSession();
   
+  const pathname = useLocation({ select: (location) => location.pathname });
+
   const userHasSystemScope = hasSystemScope(session);
+
+  // Chatbot pages show the chat threads instead of the navigation links
+  if (pathname.startsWith('/ai/chatbot')) {
+    return <ChatbotSidebar {...props} />;
+  }
 
   // If user doesn't have system scope, always show company sidebar
   if (!userHasSystemScope) {

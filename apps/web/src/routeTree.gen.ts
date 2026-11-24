@@ -48,10 +48,12 @@ import { Route as AuthenticatedDemoSettingsIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedDemoHelpCenterIndexRouteImport } from './routes/_authenticated/demo/help-center/index'
 import { Route as AuthenticatedDemoChatsIndexRouteImport } from './routes/_authenticated/demo/chats/index'
 import { Route as AuthenticatedDemoAppsIndexRouteImport } from './routes/_authenticated/demo/apps/index'
+import { Route as AuthenticatedAiChatbotIndexRouteImport } from './routes/_authenticated/ai/chatbot/index'
 import { Route as AuthenticatedDemoSettingsNotificationsRouteImport } from './routes/_authenticated/demo/settings/notifications'
 import { Route as AuthenticatedDemoSettingsDisplayRouteImport } from './routes/_authenticated/demo/settings/display'
 import { Route as AuthenticatedDemoSettingsAppearanceRouteImport } from './routes/_authenticated/demo/settings/appearance'
 import { Route as AuthenticatedDemoSettingsAccountRouteImport } from './routes/_authenticated/demo/settings/account'
+import { Route as AuthenticatedAiChatbotThreadIdRouteImport } from './routes/_authenticated/ai/chatbot/$threadId'
 import { Route as AuthenticatedCompaniesCompanyUuidRolesIndexRouteImport } from './routes/_authenticated/companies/$companyUuid/roles/index'
 import { Route as AuthenticatedCompaniesCompanyUuidRolesCreateRouteImport } from './routes/_authenticated/companies/$companyUuid/roles/create'
 import { Route as AuthenticatedCompaniesCompanyUuidRolesUuidRouteImport } from './routes/_authenticated/companies/$companyUuid/roles/$uuid'
@@ -273,6 +275,12 @@ const AuthenticatedDemoAppsIndexRoute =
     path: '/demo/apps/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAiChatbotIndexRoute =
+  AuthenticatedAiChatbotIndexRouteImport.update({
+    id: '/ai/chatbot/',
+    path: '/ai/chatbot/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDemoSettingsNotificationsRoute =
   AuthenticatedDemoSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -296,6 +304,12 @@ const AuthenticatedDemoSettingsAccountRoute =
     id: '/account',
     path: '/account',
     getParentRoute: () => AuthenticatedDemoSettingsRouteRoute,
+  } as any)
+const AuthenticatedAiChatbotThreadIdRoute =
+  AuthenticatedAiChatbotThreadIdRouteImport.update({
+    id: '/ai/chatbot/$threadId',
+    path: '/ai/chatbot/$threadId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCompaniesCompanyUuidRolesIndexRoute =
   AuthenticatedCompaniesCompanyUuidRolesIndexRouteImport.update({
@@ -348,10 +362,12 @@ export interface FileRoutesByFullPath {
   '/posts': typeof AuthenticatedPostsIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/ai/chatbot/$threadId': typeof AuthenticatedAiChatbotThreadIdRoute
   '/demo/settings/account': typeof AuthenticatedDemoSettingsAccountRoute
   '/demo/settings/appearance': typeof AuthenticatedDemoSettingsAppearanceRoute
   '/demo/settings/display': typeof AuthenticatedDemoSettingsDisplayRoute
   '/demo/settings/notifications': typeof AuthenticatedDemoSettingsNotificationsRoute
+  '/ai/chatbot': typeof AuthenticatedAiChatbotIndexRoute
   '/demo/apps': typeof AuthenticatedDemoAppsIndexRoute
   '/demo/chats': typeof AuthenticatedDemoChatsIndexRoute
   '/demo/help-center': typeof AuthenticatedDemoHelpCenterIndexRoute
@@ -393,10 +409,12 @@ export interface FileRoutesByTo {
   '/posts': typeof AuthenticatedPostsIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/ai/chatbot/$threadId': typeof AuthenticatedAiChatbotThreadIdRoute
   '/demo/settings/account': typeof AuthenticatedDemoSettingsAccountRoute
   '/demo/settings/appearance': typeof AuthenticatedDemoSettingsAppearanceRoute
   '/demo/settings/display': typeof AuthenticatedDemoSettingsDisplayRoute
   '/demo/settings/notifications': typeof AuthenticatedDemoSettingsNotificationsRoute
+  '/ai/chatbot': typeof AuthenticatedAiChatbotIndexRoute
   '/demo/apps': typeof AuthenticatedDemoAppsIndexRoute
   '/demo/chats': typeof AuthenticatedDemoChatsIndexRoute
   '/demo/help-center': typeof AuthenticatedDemoHelpCenterIndexRoute
@@ -442,10 +460,12 @@ export interface FileRoutesById {
   '/_authenticated/posts/': typeof AuthenticatedPostsIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/ai/chatbot/$threadId': typeof AuthenticatedAiChatbotThreadIdRoute
   '/_authenticated/demo/settings/account': typeof AuthenticatedDemoSettingsAccountRoute
   '/_authenticated/demo/settings/appearance': typeof AuthenticatedDemoSettingsAppearanceRoute
   '/_authenticated/demo/settings/display': typeof AuthenticatedDemoSettingsDisplayRoute
   '/_authenticated/demo/settings/notifications': typeof AuthenticatedDemoSettingsNotificationsRoute
+  '/_authenticated/ai/chatbot/': typeof AuthenticatedAiChatbotIndexRoute
   '/_authenticated/demo/apps/': typeof AuthenticatedDemoAppsIndexRoute
   '/_authenticated/demo/chats/': typeof AuthenticatedDemoChatsIndexRoute
   '/_authenticated/demo/help-center/': typeof AuthenticatedDemoHelpCenterIndexRoute
@@ -490,10 +510,12 @@ export interface FileRouteTypes {
     | '/posts'
     | '/projects'
     | '/users'
+    | '/ai/chatbot/$threadId'
     | '/demo/settings/account'
     | '/demo/settings/appearance'
     | '/demo/settings/display'
     | '/demo/settings/notifications'
+    | '/ai/chatbot'
     | '/demo/apps'
     | '/demo/chats'
     | '/demo/help-center'
@@ -535,10 +557,12 @@ export interface FileRouteTypes {
     | '/posts'
     | '/projects'
     | '/users'
+    | '/ai/chatbot/$threadId'
     | '/demo/settings/account'
     | '/demo/settings/appearance'
     | '/demo/settings/display'
     | '/demo/settings/notifications'
+    | '/ai/chatbot'
     | '/demo/apps'
     | '/demo/chats'
     | '/demo/help-center'
@@ -583,10 +607,12 @@ export interface FileRouteTypes {
     | '/_authenticated/posts/'
     | '/_authenticated/projects/'
     | '/_authenticated/users/'
+    | '/_authenticated/ai/chatbot/$threadId'
     | '/_authenticated/demo/settings/account'
     | '/_authenticated/demo/settings/appearance'
     | '/_authenticated/demo/settings/display'
     | '/_authenticated/demo/settings/notifications'
+    | '/_authenticated/ai/chatbot/'
     | '/_authenticated/demo/apps/'
     | '/_authenticated/demo/chats/'
     | '/_authenticated/demo/help-center/'
@@ -883,6 +909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDemoAppsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ai/chatbot/': {
+      id: '/_authenticated/ai/chatbot/'
+      path: '/ai/chatbot'
+      fullPath: '/ai/chatbot'
+      preLoaderRoute: typeof AuthenticatedAiChatbotIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/demo/settings/notifications': {
       id: '/_authenticated/demo/settings/notifications'
       path: '/notifications'
@@ -910,6 +943,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/settings/account'
       preLoaderRoute: typeof AuthenticatedDemoSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedDemoSettingsRouteRoute
+    }
+    '/_authenticated/ai/chatbot/$threadId': {
+      id: '/_authenticated/ai/chatbot/$threadId'
+      path: '/ai/chatbot/$threadId'
+      fullPath: '/ai/chatbot/$threadId'
+      preLoaderRoute: typeof AuthenticatedAiChatbotThreadIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/companies/$companyUuid/roles/': {
       id: '/_authenticated/companies/$companyUuid/roles/'
@@ -1002,6 +1042,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPostsIndexRoute: typeof AuthenticatedPostsIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedAiChatbotThreadIdRoute: typeof AuthenticatedAiChatbotThreadIdRoute
+  AuthenticatedAiChatbotIndexRoute: typeof AuthenticatedAiChatbotIndexRoute
   AuthenticatedDemoAppsIndexRoute: typeof AuthenticatedDemoAppsIndexRoute
   AuthenticatedDemoChatsIndexRoute: typeof AuthenticatedDemoChatsIndexRoute
   AuthenticatedDemoHelpCenterIndexRoute: typeof AuthenticatedDemoHelpCenterIndexRoute
@@ -1036,6 +1078,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPostsIndexRoute: AuthenticatedPostsIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedAiChatbotThreadIdRoute: AuthenticatedAiChatbotThreadIdRoute,
+  AuthenticatedAiChatbotIndexRoute: AuthenticatedAiChatbotIndexRoute,
   AuthenticatedDemoAppsIndexRoute: AuthenticatedDemoAppsIndexRoute,
   AuthenticatedDemoChatsIndexRoute: AuthenticatedDemoChatsIndexRoute,
   AuthenticatedDemoHelpCenterIndexRoute: AuthenticatedDemoHelpCenterIndexRoute,
