@@ -171,6 +171,7 @@ model User {
   CompanyMember   CompanyMember[]  @relation("UserToCompanyMember")
   projects        Project[]        @relation("ProjectToUser")
   threads         Thread[]         @relation("ThreadToUser")
+  postComments    PostComment[]    @relation("PostCommentToUser")
 
   @@index([deletedAt])
   @@index([scope])
@@ -295,6 +296,8 @@ model Post {
   /// @prismabox.hide
   authorId String @map("author_id")
 
+  comments PostComment[] @relation("PostCommentToPost")
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   /// @prismabox.input.hide
@@ -302,6 +305,32 @@ model Post {
 
   @@index([deletedAt])
   @@map("posts")
+}
+
+model PostComment {
+  /// @prismabox.hide
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid())
+
+  /// @prismabox.options{minLength:1}
+  content String @db.Text
+
+  post   Post @relation("PostCommentToPost", fields: [postId], references: [id], onDelete: Cascade)
+  /// @prismabox.hide
+  postId Int  @map("post_id")
+
+  author   User   @relation("PostCommentToUser", fields: [authorId], references: [id], onDelete: Cascade)
+  /// @prismabox.hide
+  authorId String @map("author_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  /// @prismabox.input.hide
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([postId])
+  @@index([deletedAt])
+  @@map("post_comments")
 }
 
 model UserRole {

@@ -3,14 +3,8 @@ import prisma from '@onlyjs/db';
 import { FileLibraryAssetType, type Prisma } from '@onlyjs/db/client';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
-import {
-  BadGatewayException,
-  HttpError,
-  NotFoundException,
-  ServiceUnavailableException,
-  TooManyRequestsException,
-  UnprocessableEntityException,
-} from '../../../utils';
+import { NotFoundException, UnprocessableEntityException } from '../../../utils';
+import { toAgentHttpError } from '../../../utils/agent-errors';
 import { FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import { FileLibraryAssetsService } from '../service';
@@ -25,36 +19,6 @@ const EXTRACT_PROMPT =
   'Belgede gerçekten olmayan bilgi için null yaz.';
 
 export abstract class OcrService {
-  private static async handleAgentError(error: unknown, context: 'read' | 'extract') {
-    // FileLibraryAssetsService errors arrive as rejected promises
-    if (error instanceof Promise) {
-      error = await error.catch((rejection: unknown) => rejection);
-    }
-
-    if (error instanceof HttpError) {
-      return error;
-    }
-
-    console.error(`Error in OcrService.${context}:`, error);
-
-    const statusCode =
-      typeof error === 'object' && error !== null && 'statusCode' in error
-        ? error.statusCode
-        : undefined;
-
-    if (statusCode === 429) {
-      return new TooManyRequestsException(
-        'Yapay zekâ servisi şu an yoğun, biraz sonra tekrar deneyin',
-      );
-    }
-    if (statusCode === 401 || statusCode === 402 || statusCode === 403) {
-      return new ServiceUnavailableException(
-        'Yapay zekâ servisine bağlanılamadı, OpenRouter anahtarını kontrol edin',
-      );
-    }
-    return new BadGatewayException('Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin');
-  }
-
   private static async loadDocument(uuid: string) {
     const asset = await FileLibraryAssetsService.show(uuid);
     if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
@@ -103,7 +67,11 @@ export abstract class OcrService {
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw await this.handleAgentError(error, 'read');
+      throw await toAgentHttpError(
+        error,
+        'OcrService.read',
+        'Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin',
+      );
     }
   }
 
@@ -135,7 +103,11 @@ export abstract class OcrService {
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw await this.handleAgentError(error, 'extract');
+      throw await toAgentHttpError(
+        error,
+        'OcrService.extract',
+        'Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin',
+      );
     }
   }
 }

@@ -1,16 +1,11 @@
 import prisma from '@onlyjs/db';
 import { ChatMessageRole } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
+import { RequestContext } from '@mastra/core/request-context';
 import { mastra } from '../../mastra';
 import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processors/chat-guardrails';
-import {
-  BadGatewayException,
-  HttpError,
-  NotFoundException,
-  ServiceUnavailableException,
-  TooManyRequestsException,
-  UnprocessableEntityException,
-} from '../../utils';
+import { NotFoundException, UnprocessableEntityException } from '../../utils';
+import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
 import { RagService } from '../file-library-assets/services/rag.service';
 import type { ThreadCreatePayload, ThreadMessagePayload } from './types';
@@ -24,31 +19,6 @@ export abstract class ThreadsService {
     }
     console.error(`Error in ThreadsService.${context}:`, error);
     throw error;
-  }
-
-  private static handleAgentError(error: unknown): never {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-
-    console.error('Error in ThreadsService.generate:', error);
-
-    const statusCode =
-      typeof error === 'object' && error !== null && 'statusCode' in error
-        ? error.statusCode
-        : undefined;
-
-    if (statusCode === 429) {
-      throw new TooManyRequestsException(
-        'Yapay zekâ servisi şu an yoğun, biraz sonra tekrar deneyin',
-      );
-    }
-    if (statusCode === 401 || statusCode === 402 || statusCode === 403) {
-      throw new ServiceUnavailableException(
-        'Yapay zekâ servisine bağlanılamadı, OpenRouter anahtarını kontrol edin',
-      );
-    }
-    throw new BadGatewayException('Yapay zekâ servisi cevap veremedi, tekrar deneyin');
   }
 
   static async index(query: PaginationQuery, resourceId: string) {
@@ -109,7 +79,7 @@ export abstract class ThreadsService {
     }
   }
 
-  private static async generate(content: string) {
+  private static async generate(content: string, userId: string) {
     try {
       const chunks = await RagService.search(content);
       const context = chunks.length
@@ -124,6 +94,7 @@ export abstract class ThreadsService {
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(content, {
         context,
+        requestContext: new RequestContext([['userId', userId]]),
         inputProcessors: chatInputProcessors,
         outputProcessors: chatOutputProcessors,
       });
@@ -133,14 +104,18 @@ export abstract class ThreadsService {
       }
       return result.text;
     } catch (error) {
-      this.handleAgentError(error);
+      throw await toAgentHttpError(
+        error,
+        'ThreadsService.generate',
+        'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
+      );
     }
   }
 
   static async reply(threadId: string, payload: ThreadMessagePayload, resourceId: string) {
     const thread = await this.show(threadId, resourceId);
 
-    const text = await this.generate(payload.content);
+    const text = await this.generate(payload.content, resourceId);
     await this.addMessage(thread.id, ChatMessageRole.USER, payload.content);
     await this.addMessage(thread.id, ChatMessageRole.ASSISTANT, text);
 

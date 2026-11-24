@@ -295,6 +295,28 @@ export const PERMISSIONS = {
       scopes: [GLOBAL],
     },
   },
+  POST_COMMENTS: {
+    SHOW: {
+      key: 'post-comments:show',
+      description: 'Yorumları Görüntüle',
+      scopes: [GLOBAL],
+    },
+    CREATE: {
+      key: 'post-comments:create',
+      description: 'Yorum Oluştur',
+      scopes: [GLOBAL],
+    },
+    UPDATE: {
+      key: 'post-comments:update',
+      description: 'Yorum Güncelle',
+      scopes: [GLOBAL],
+    },
+    DESTROY: {
+      key: 'post-comments:destroy',
+      description: 'Yorum Sil',
+      scopes: [GLOBAL],
+    },
+  },
 
   // ====================================================================
   // 📋 PROJECT MANAGEMENT (Example CRUD with permission-based authorization)
@@ -504,6 +526,11 @@ export const PERMISSION_GROUPS = {
     key: 'posts',
     description: 'Gönderiler',
     permissions: Object.values(PERMISSIONS.POSTS),
+  },
+  POST_COMMENTS: {
+    key: 'post-comments',
+    description: 'Gönderi Yorumları',
+    permissions: Object.values(PERMISSIONS.POST_COMMENTS),
   },
 
   // ====================================================================
