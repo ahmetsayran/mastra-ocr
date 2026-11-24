@@ -39,13 +39,17 @@ export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
 
 export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
   invoiceNumber: z.string().nullable().describe('Fatura numarası'),
-  invoiceDate: z.string().nullable().describe('Fatura tarihi, YYYY-MM-DD'),
+  invoiceDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .describe('Fatura tarihi, YYYY-MM-DD'),
   sellerName: z.string().nullable().describe('Satıcı firma veya kişi adı'),
   buyerName: z.string().nullable().describe('Alıcı firma veya kişi adı'),
-  subtotal: z.number().nullable().describe('KDV hariç ara toplam'),
-  taxAmount: z.number().nullable().describe('KDV tutarı'),
-  totalAmount: z.number().nullable().describe('Genel toplam, ödenecek tutar'),
-  currency: z.string().nullable().describe('Para birimi kodu, örnek TRY'),
+  subtotal: z.number().nonnegative().nullable().describe('KDV hariç ara toplam'),
+  taxAmount: z.number().nonnegative().nullable().describe('KDV tutarı'),
+  totalAmount: z.number().nonnegative().nullable().describe('Genel toplam, ödenecek tutar'),
+  currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
 });
 
 export const FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE = 1000; // characters

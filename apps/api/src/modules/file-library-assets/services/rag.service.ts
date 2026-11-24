@@ -51,8 +51,8 @@ export abstract class RagService {
       prisma.documentChunk.deleteMany({ where: { assetId: asset.id } }),
       ...chunks.map(
         (content, i) => prisma.$executeRaw`
-          INSERT INTO "document_chunks" ("uuid", "asset_id", "content", "embedding")
-          VALUES (${randomUUID()}, ${asset.id}, ${content}, ${this.toVector(embeddings[i]!)}::vector)
+          INSERT INTO "document_chunks" ("uuid", "asset_id", "content", "embedding", "created_at")
+          VALUES (${randomUUID()}, ${asset.id}, ${content}, ${this.toVector(embeddings[i]!)}::vector, now() AT TIME ZONE 'UTC')
         `,
       ),
     ]);

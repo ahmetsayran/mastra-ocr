@@ -1,10 +1,12 @@
 import fs from 'fs';
-import { FileLibraryAssetType } from '@onlyjs/db/client';
+import prisma from '@onlyjs/db';
+import { FileLibraryAssetType, type Prisma } from '@onlyjs/db/client';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
 import {
   BadGatewayException,
   HttpError,
+  NotFoundException,
   ServiceUnavailableException,
   TooManyRequestsException,
   UnprocessableEntityException,
@@ -18,7 +20,7 @@ const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 const EXTRACT_PROMPT =
   'Bu faturadaki bilgileri ayıkla. Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
   'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
-  'Ara toplamı sadece belgede ayrıca "Ara Toplam" ya da KDV hariç tutar olarak yazıyorsa doldur. ' +
+  'Ara toplam KDV hariç tutardır; belgede "Ara Toplam" yazmıyorsa ürün ve hizmet satırlarındaki tutarların toplamını yaz. ' +
   'Tarihi YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
   'Belgede gerçekten olmayan bilgi için null yaz.';
 
@@ -61,14 +63,30 @@ export abstract class OcrService {
 
     const image = await fs.promises.readFile(getStoragePath(asset.path));
     const mimeType = asset.mimeType.replace('_', '/').toLowerCase();
-    const metadata = (asset.metadata ?? {}) as Record<string, unknown>;
 
-    return { image, mimeType, metadata };
+    return { image, mimeType };
+  }
+
+  private static async saveMetadata(uuid: string, data: Record<string, unknown>) {
+    // Row lock: background read and extract must not overwrite each other's metadata
+    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const [asset] = await tx.$queryRaw<{ metadata: Record<string, unknown> | null }[]>`
+        SELECT "metadata" FROM "file_library_assets" WHERE "uuid" = ${uuid} FOR UPDATE
+      `;
+      if (!asset) {
+        throw new NotFoundException('Dosya bulunamadı.');
+      }
+      return FileLibraryAssetsService.update(
+        uuid,
+        { metadata: { ...asset.metadata, ...data } },
+        tx,
+      );
+    });
   }
 
   static async read(uuid: string) {
     try {
-      const { image, mimeType, metadata } = await this.loadDocument(uuid);
+      const { image, mimeType } = await this.loadDocument(uuid);
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate([
@@ -81,9 +99,7 @@ export abstract class OcrService {
         },
       ]);
 
-      const updatedAsset = await FileLibraryAssetsService.update(uuid, {
-        metadata: { ...metadata, text: result.text },
-      });
+      const updatedAsset = await this.saveMetadata(uuid, { text: result.text });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
@@ -93,7 +109,7 @@ export abstract class OcrService {
 
   static async extract(uuid: string) {
     try {
-      const { image, mimeType, metadata } = await this.loadDocument(uuid);
+      const { image, mimeType } = await this.loadDocument(uuid);
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(
@@ -111,12 +127,11 @@ export abstract class OcrService {
             schema: FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
             jsonPromptInjection: 'auto',
           },
+          modelSettings: { temperature: 0 },
         },
       );
 
-      const updatedAsset = await FileLibraryAssetsService.update(uuid, {
-        metadata: { ...metadata, invoice: result.object },
-      });
+      const updatedAsset = await this.saveMetadata(uuid, { invoice: result.object });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
