@@ -9,21 +9,21 @@ import {
   TooManyRequestsException,
 } from '../../utils';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
-import type { ChatThreadCreatePayload, ChatThreadMessagePayload } from './types';
+import type { ThreadCreatePayload, ThreadMessagePayload } from './types';
 
-export abstract class ChatThreadsService {
+export abstract class ThreadsService {
   private static handlePrismaError(error: unknown, context: 'find' | 'create'): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Sohbet bulunamadı');
       }
     }
-    console.error(`Error in ChatThreadsService.${context}:`, error);
+    console.error(`Error in ThreadsService.${context}:`, error);
     throw error;
   }
 
   private static handleAgentError(error: unknown): never {
-    console.error('Error in ChatThreadsService.generate:', error);
+    console.error('Error in ThreadsService.generate:', error);
 
     const statusCode =
       typeof error === 'object' && error !== null && 'statusCode' in error
@@ -49,13 +49,13 @@ export abstract class ChatThreadsService {
       const where = { resourceId, deletedAt: null };
 
       const [data, total] = await Promise.all([
-        prisma.chatThread.findMany({
+        prisma.thread.findMany({
           where,
           skip,
           take: perPage,
           orderBy: { createdAt: 'desc' },
         }),
-        prisma.chatThread.count({ where }),
+        prisma.thread.count({ where }),
       ]);
 
       return { data, total };
@@ -64,10 +64,10 @@ export abstract class ChatThreadsService {
     }
   }
 
-  static async show(uuid: string, resourceId: string) {
+  static async show(threadId: string, resourceId: string) {
     try {
-      const thread = await prisma.chatThread.findFirst({
-        where: { uuid, resourceId, deletedAt: null },
+      const thread = await prisma.thread.findFirst({
+        where: { uuid: threadId, resourceId, deletedAt: null },
         include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
 
@@ -81,9 +81,9 @@ export abstract class ChatThreadsService {
     }
   }
 
-  static async store(data: ChatThreadCreatePayload, resourceId: string) {
+  static async store(data: ThreadCreatePayload, resourceId: string) {
     try {
-      return await prisma.chatThread.create({
+      return await prisma.thread.create({
         data: { ...data, resourceId },
       });
     } catch (error) {
@@ -103,7 +103,7 @@ export abstract class ChatThreadsService {
 
   private static async generate(content: string) {
     try {
-      const agent = mastra.getAgent('chatAgent');
+      const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(content);
       return result.text;
     } catch (error) {
@@ -111,8 +111,8 @@ export abstract class ChatThreadsService {
     }
   }
 
-  static async reply(uuid: string, payload: ChatThreadMessagePayload, resourceId: string) {
-    const thread = await this.show(uuid, resourceId);
+  static async reply(threadId: string, payload: ThreadMessagePayload, resourceId: string) {
+    const thread = await this.show(threadId, resourceId);
 
     const text = await this.generate(payload.content);
     await this.addMessage(thread.id, ChatMessageRole.USER, payload.content);

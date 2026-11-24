@@ -4,14 +4,9 @@ import { PaginationService } from '../../utils/pagination';
 import { AuditLogAction, AuditLogEntity, withAuditLog } from '../audit-logs';
 import { auth, dtoWithPermission, PERMISSIONS, withPermission } from '../auth';
 import { CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
-import {
-  chatThreadCreateDto,
-  chatThreadIndexDto,
-  chatThreadMessageDto,
-  chatThreadShowDto,
-} from './dtos';
-import { ChatThreadFormatter } from './formatters';
-import { ChatThreadsService } from './service';
+import { threadCreateDto, threadIndexDto, threadMessageDto, threadShowDto } from './dtos';
+import { ThreadFormatter } from './formatters';
+import { ThreadsService } from './service';
 
 async function* streamWords(text: string) {
   for (const chunk of text.match(/\S+\s*/g) ?? []) {
@@ -20,44 +15,44 @@ async function* streamWords(text: string) {
   }
 }
 
-const app = new Elysia({ prefix: '/chat-threads', tags: ['Chat Thread'] })
+const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
   .use(auth())
   .get(
     '/',
     async ({ query, user }) => {
-      const { data, total } = await ChatThreadsService.index(query, user.id);
+      const { data, total } = await ThreadsService.index(query, user.id);
       return PaginationService.createPaginatedResponse({
         data,
         total,
         query,
-        formatter: ChatThreadFormatter.response,
+        formatter: ThreadFormatter.response,
       });
     },
-    dtoWithPermission(chatThreadIndexDto, PERMISSIONS.CHAT_THREADS.SHOW),
+    dtoWithPermission(threadIndexDto, PERMISSIONS.THREADS.SHOW),
   )
   .get(
-    '/:uuid',
+    '/:threadId',
     async ({ params, user }) => {
-      const thread = await ChatThreadsService.show(params.uuid, user.id);
-      return ChatThreadFormatter.detail(thread);
+      const thread = await ThreadsService.show(params.threadId, user.id);
+      return ThreadFormatter.detail(thread);
     },
-    dtoWithPermission(chatThreadShowDto, PERMISSIONS.CHAT_THREADS.SHOW),
+    dtoWithPermission(threadShowDto, PERMISSIONS.THREADS.SHOW),
   )
   .post(
     '/',
     async ({ body, user }) => {
-      const thread = await ChatThreadsService.store(body, user.id);
-      return ChatThreadFormatter.response(thread);
+      const thread = await ThreadsService.store(body, user.id);
+      return ThreadFormatter.response(thread);
     },
     dtoWithMiddlewares(
-      chatThreadCreateDto,
-      withPermission(PERMISSIONS.CHAT_THREADS.CREATE),
+      threadCreateDto,
+      withPermission(PERMISSIONS.THREADS.CREATE),
       withAuditLog({
         actionType: AuditLogAction.CREATE,
-        entityType: AuditLogEntity.CHAT_THREAD,
+        entityType: AuditLogEntity.THREAD,
         getEntityUuid: (ctx) => {
           // @ts-ignore
-          const response = ctx.response as ReturnType<typeof ChatThreadFormatter.response>;
+          const response = ctx.response as ReturnType<typeof ThreadFormatter.response>;
           return response.uuid;
         },
         getDescription: () => 'Yeni sohbet oluşturuldu',
@@ -65,19 +60,19 @@ const app = new Elysia({ prefix: '/chat-threads', tags: ['Chat Thread'] })
     ),
   )
   .post(
-    '/:uuid/messages',
+    '/:threadId/messages',
     async ({ params, body, user }) => {
       // Full buffering: the whole answer is ready before streaming starts
-      const text = await ChatThreadsService.reply(params.uuid, body, user.id);
+      const text = await ThreadsService.reply(params.threadId, body, user.id);
       return streamWords(text);
     },
     dtoWithMiddlewares(
-      chatThreadMessageDto,
-      withPermission(PERMISSIONS.CHAT_THREADS.CREATE),
+      threadMessageDto,
+      withPermission(PERMISSIONS.THREADS.CREATE),
       withAuditLog({
         actionType: AuditLogAction.UPDATE,
-        entityType: AuditLogEntity.CHAT_THREAD,
-        getEntityUuid: ({ params }) => params.uuid!,
+        entityType: AuditLogEntity.THREAD,
+        getEntityUuid: ({ params }) => params.threadId!,
         getDescription: () => 'Sohbete mesaj gönderildi',
       }),
     ),

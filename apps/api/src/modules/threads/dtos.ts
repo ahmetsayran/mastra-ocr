@@ -1,22 +1,22 @@
 import { ChatMessagePlain, ChatMessagePlainInputCreate } from '@onlyjs/db/prismabox/ChatMessage';
-import { ChatThreadPlain, ChatThreadPlainInputCreate } from '@onlyjs/db/prismabox/ChatThread';
+import { ThreadPlain, ThreadPlainInputCreate } from '@onlyjs/db/prismabox/Thread';
 import { t } from 'elysia';
 import { type ControllerHook, errorResponseDto, uuidValidation } from '../../utils';
 import { paginationQueryDto, paginationResponseDto } from '../../utils/pagination';
 
-export const chatThreadResponseDto = ChatThreadPlain;
+export const threadResponseDto = ThreadPlain;
 
-export const chatThreadDetailResponseDto = t.Composite([
-  ChatThreadPlain,
+export const threadDetailResponseDto = t.Composite([
+  ThreadPlain,
   t.Object({
     messages: t.Array(ChatMessagePlain),
   }),
 ]);
 
-export const chatThreadIndexDto = {
+export const threadIndexDto = {
   query: paginationQueryDto,
   response: {
-    200: paginationResponseDto(chatThreadResponseDto),
+    200: paginationResponseDto(threadResponseDto),
   },
   detail: {
     summary: 'Index',
@@ -24,29 +24,29 @@ export const chatThreadIndexDto = {
   },
 } satisfies ControllerHook;
 
-export const chatThreadCreateDto = {
-  body: ChatThreadPlainInputCreate,
-  response: { 200: chatThreadResponseDto, 422: errorResponseDto[422] },
+export const threadCreateDto = {
+  body: ThreadPlainInputCreate,
+  response: { 200: threadResponseDto, 422: errorResponseDto[422] },
   detail: {
     summary: 'Create',
     description: 'Yeni sohbet oluşturur',
   },
 } satisfies ControllerHook;
 
-export const chatThreadShowDto = {
+export const threadShowDto = {
   params: t.Object({
-    uuid: uuidValidation,
+    threadId: uuidValidation,
   }),
-  response: { 200: chatThreadDetailResponseDto, 404: errorResponseDto[404] },
+  response: { 200: threadDetailResponseDto, 404: errorResponseDto[404] },
   detail: {
     summary: 'Show',
     description: 'Sohbeti ve mesajlarını döndürür',
   },
 } satisfies ControllerHook;
 
-export const chatThreadMessageDto = {
+export const threadMessageDto = {
   params: t.Object({
-    uuid: uuidValidation,
+    threadId: uuidValidation,
   }),
   body: t.Pick(ChatMessagePlainInputCreate, ['content']),
   response: {

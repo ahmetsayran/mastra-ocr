@@ -7,7 +7,7 @@ import { systemAdministrationController } from './system-administration';
 import { usersController } from './users';
 import { companiesController } from './companies';
 import projectsController from './projects';
-import { chatThreadsController } from './chat-threads';
+import { threadsController } from './threads';
 
 const app = new Elysia()
   .use(systemAdministrationController)
@@ -18,7 +18,7 @@ const app = new Elysia()
   .use(locationsController)
   .use(companiesController)
   .use(fileLibraryAssetsController)
-  .use(chatThreadsController)
+  .use(threadsController)
   .get(
     '/',
     () => ({
@@ -48,7 +48,7 @@ export const swaggerTags: { name: string; description: string }[] = [
   { name: 'Region', description: 'Region endpoints' },
   { name: 'Subregion', description: 'Subregion endpoints' },
   { name: 'File Library Assets', description: 'File Library Assets endpoints' },
-  { name: 'Chat Thread', description: 'AI chat thread endpoints' },
+  { name: 'Thread', description: 'AI chat thread endpoints' },
 ];
 
 export default app;

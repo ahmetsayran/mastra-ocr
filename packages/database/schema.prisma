@@ -170,7 +170,7 @@ model User {
   company         Company[]        @relation("CompanyToOwner")
   CompanyMember   CompanyMember[]  @relation("UserToCompanyMember")
   projects        Project[]        @relation("ProjectToUser")
-  chatThreads     ChatThread[]     @relation("ChatThreadToUser")
+  threads         Thread[]         @relation("ThreadToUser")
 
   @@index([deletedAt])
   @@index([scope])
@@ -705,7 +705,7 @@ enum ChatMessageRole {
   @@map("chat_message_role")
 }
 
-model ChatThread {
+model Thread {
   /// @prismabox.hide
   id   Int    @id @default(autoincrement())
   uuid String @unique @default(uuid())
@@ -714,11 +714,11 @@ model ChatThread {
   title String @db.VarChar(255)
 
   // Thread owner (Mastra resourceId = userId)
-  resource   User   @relation("ChatThreadToUser", fields: [resourceId], references: [id], onDelete: Cascade)
+  resource   User   @relation("ThreadToUser", fields: [resourceId], references: [id], onDelete: Cascade)
   /// @prismabox.hide
   resourceId String @map("resource_id")
 
-  messages ChatMessage[] @relation("ChatMessageToChatThread")
+  messages ChatMessage[] @relation("ChatMessageToThread")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -727,7 +727,7 @@ model ChatThread {
 
   @@index([resourceId])
   @@index([deletedAt])
-  @@map("chat_threads")
+  @@map("threads")
 }
 
 model ChatMessage {
@@ -735,9 +735,9 @@ model ChatMessage {
   id   Int    @id @default(autoincrement())
   uuid String @unique @default(uuid())
 
-  thread   ChatThread @relation("ChatMessageToChatThread", fields: [threadId], references: [id], onDelete: Cascade)
+  thread   Thread @relation("ChatMessageToThread", fields: [threadId], references: [id], onDelete: Cascade)
   /// @prismabox.hide
-  threadId Int        @map("thread_id")
+  threadId Int    @map("thread_id")
 
   role ChatMessageRole
 

@@ -407,14 +407,14 @@ export const PERMISSIONS = {
   // ====================================================================
   // 💬 AI CHAT
   // ====================================================================
-  CHAT_THREADS: {
+  THREADS: {
     SHOW: {
-      key: 'chat-threads:show',
+      key: 'threads:show',
       description: 'Sohbetleri Görüntüle',
       scopes: [GLOBAL],
     },
     CREATE: {
-      key: 'chat-threads:create',
+      key: 'threads:create',
       description: 'Sohbet Oluştur ve Mesaj Gönder',
       scopes: [GLOBAL],
     },
@@ -536,10 +536,10 @@ export const PERMISSION_GROUPS = {
   // ====================================================================
   // 💬 AI CHAT
   // ====================================================================
-  CHAT_THREADS: {
-    key: 'chat-threads',
+  THREADS: {
+    key: 'threads',
     description: 'Yapay Zekâ Sohbetleri',
-    permissions: Object.values(PERMISSIONS.CHAT_THREADS),
+    permissions: Object.values(PERMISSIONS.THREADS),
   },
 } as const satisfies Record<
   string,
