@@ -12,6 +12,7 @@ import {
   UnprocessableEntityException,
 } from '../../utils';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
+import { RagService } from '../file-library-assets/services/rag.service';
 import type { ThreadCreatePayload, ThreadMessagePayload } from './types';
 
 export abstract class ThreadsService {
@@ -110,8 +111,19 @@ export abstract class ThreadsService {
 
   private static async generate(content: string) {
     try {
+      const chunks = await RagService.search(content);
+      const context = chunks.length
+        ? [
+            {
+              role: 'system' as const,
+              content: `Belgelerden ilgili bölümler:\n\n${chunks.map((chunk: { content: string }) => chunk.content).join('\n---\n')}`,
+            },
+          ]
+        : undefined;
+
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(content, {
+        context,
         inputProcessors: chatInputProcessors,
         outputProcessors: chatOutputProcessors,
       });

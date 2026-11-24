@@ -48,6 +48,9 @@ export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
   currency: z.string().nullable().describe('Para birimi kodu, örnek TRY'),
 });
 
+export const FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE = 1000; // characters
+export const FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT = 3;
+
 export const FILE_LIBRARY_ASSET_TYPE_RULES = {
   //PRODUCT_IMAGE
   [FileLibraryAssetType.PRODUCT_IMAGE]: {

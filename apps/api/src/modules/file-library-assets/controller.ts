@@ -13,6 +13,7 @@ import {
   fileLibraryAssetUpdateDto,
 } from './dtos';
 import { FileLibraryAssetFormatter } from './formatters';
+import { withDocumentIndexing } from './middleware';
 import { FileLibraryAssetsService } from './service';
 import { OcrService } from './services/ocr.service';
 
@@ -63,6 +64,7 @@ const fileLibraryAssetsController = new Elysia({
           return 'Yeni dosya oluşturuldu';
         },
       }),
+      withDocumentIndexing(),
     ),
   )
   .put(

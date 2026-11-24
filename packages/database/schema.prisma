@@ -551,7 +551,8 @@ model FileLibraryAsset {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  user User[]
+  user           User[]
+  documentChunks DocumentChunk[] @relation("DocumentChunkToFileLibraryAsset")
 
   @@map("file_library_assets")
 }
@@ -748,4 +749,22 @@ model ChatMessage {
 
   @@index([threadId])
   @@map("chat_messages")
+}
+
+model DocumentChunk {
+  /// @prismabox.hide
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid())
+
+  asset   FileLibraryAsset @relation("DocumentChunkToFileLibraryAsset", fields: [assetId], references: [id], onDelete: Cascade)
+  /// @prismabox.hide
+  assetId Int              @map("asset_id")
+
+  content   String                      @db.Text
+  embedding Unsupported("vector(2048)")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([assetId])
+  @@map("document_chunks")
 }
