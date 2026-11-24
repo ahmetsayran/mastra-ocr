@@ -181,10 +181,8 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
 
     readFileLibraryAsset: ocrReadMutation.mutateAsync,
     isReading: ocrReadMutation.isPending,
-    readError: ocrReadMutation.error,
 
     extractFileLibraryAsset: ocrExtractMutation.mutateAsync,
     isExtracting: ocrExtractMutation.isPending,
-    extractError: ocrExtractMutation.error,
   };
 }

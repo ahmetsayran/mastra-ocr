@@ -10,7 +10,6 @@
     "emails:preview": "email dev --dir src/emails --port 3333",
     "knip": "knip --workspace apps/api",
     "mastra:dev": "cross-env PORT=4111 dotenvx run --quiet -f ../../config/apps/api/.env -- mastra dev",
-    "mastra:build": "cross-env PORT=4111 dotenvx run --quiet -f ../../config/apps/api/.env -- mastra build",
     "dev": "dotenvx run --quiet -f ../../config/apps/api/.env -- nodemon",
     "serve": "dotenvx run --quiet -f ../../config/apps/api/.env -- bun run dev",
     "start": "dotenvx run --quiet -f ../../config/apps/api/.env -- bun ../../dist/apps/api/index.js",
