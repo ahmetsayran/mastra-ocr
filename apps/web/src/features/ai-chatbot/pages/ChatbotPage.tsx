@@ -3,14 +3,20 @@ import { Main } from '#/components/layout/main';
 import { ProfileDropdown } from '#/components/profile-dropdown';
 import { ThemeSwitch } from '#/components/theme-switch';
 import { Button } from '#/components/ui/button';
+import { useFileLibraryAssets } from '#/features/file-library-assets';
 import { cn } from '#/lib/utils';
-import { IconMessages, IconSend } from '@tabler/icons-react';
+import { FileLibraryAssetType } from '@onlyjs/db/enums';
+import { IconMessages, IconPaperclip, IconSend } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useChatbot } from '../hooks/use-chatbot';
 import { threadDetailQueryOptions } from '../queries/thread-queries';
+
+// Same MIME types the API accepts for OCR documents
+const DOCUMENT_ACCEPT = 'image/jpeg,image/png,image/webp';
 
 type ChatBubble = { key: string; role: 'USER' | 'ASSISTANT'; content: string; createdAt?: Date };
 
@@ -19,6 +25,8 @@ export function ChatbotPage() {
   const [message, setMessage] = useState('');
   const { data: thread } = useQuery({ ...threadDetailQueryOptions(threadId ?? '') });
   const { sendMessage, isSending, pendingMessage, streamedReply } = useChatbot(threadId);
+  const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const bubbles: ChatBubble[] = (threadId ? (thread?.messages ?? []) : []).map((msg) => ({
     key: msg.uuid,
@@ -37,6 +45,18 @@ export function ChatbotPage() {
     if (!content || isSending) return;
     sendMessage(content);
     setMessage('');
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      await createFileLibraryAsset({ file, type: FileLibraryAssetType.OCR_DOCUMENT });
+      toast.success(`Document added: ${file.name}. You can ask about it shortly.`);
+    } catch {
+      // The error toast comes from the global mutation onError handler
+    }
   };
 
   return (
@@ -97,6 +117,23 @@ export function ChatbotPage() {
             </div>
             <form className="flex w-full flex-none gap-2" onSubmit={handleSubmit}>
               <div className="border-input focus-within:ring-ring flex flex-1 items-center gap-2 rounded-md border px-2 py-1 focus-within:ring-1 focus-within:outline-hidden lg:gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={DOCUMENT_ACCEPT}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  title="Add document"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isCreating}
+                >
+                  <IconPaperclip size={20} />
+                </Button>
                 <label className="flex-1">
                   <span className="sr-only">Chat Text Box</span>
                   <input
