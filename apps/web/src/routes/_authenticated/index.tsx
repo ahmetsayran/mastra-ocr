@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import Dashboard from '#/features/dashboard';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
+// The panel opens on the chatbot page (also after sign-in, which goes to '/')
 export const Route = createFileRoute('/_authenticated/')({
-  component: Dashboard,
+  beforeLoad: () => {
+    throw redirect({ to: '/ai/chatbot' });
+  },
 });
