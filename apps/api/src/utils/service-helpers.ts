@@ -282,7 +282,7 @@ export function prepareFiltersQuery(
 
           searchFilters.push({
             [key]: {
-              contains: value.toLocaleUpperCase('tr'),
+              contains: value.toLocaleLowerCase('tr'),
               mode: 'insensitive',
             },
           });
