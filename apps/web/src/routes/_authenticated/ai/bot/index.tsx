@@ -1,4 +1,4 @@
-import { AiBotPage, threadsListQueryOptions } from '#/features/ai-bot';
+import { AiBotPage } from '#/features/ai-bot';
 import { useLanguage } from '#/context/language-context';
 import { PERMISSIONS } from '#/lib/auth';
 import { guards } from '#/lib/router/guards';
@@ -9,9 +9,6 @@ export const Route = createFileRoute('/_authenticated/ai/bot/')({
     guards.requirePermission(context, {
       permissions: PERMISSIONS.THREADS.SHOW,
     });
-  },
-  loader: ({ context }) => {
-    return context.queryClient.ensureQueryData(threadsListQueryOptions());
   },
   component: AiBotPage,
   pendingComponent: () => {
