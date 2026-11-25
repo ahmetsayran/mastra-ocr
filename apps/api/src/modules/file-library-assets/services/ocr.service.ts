@@ -1,6 +1,6 @@
 import fs from 'fs';
 import prisma from '@onlyjs/db';
-import { FileLibraryAssetType, type Prisma } from '@onlyjs/db/client';
+import { FileLibraryAssetMimeType, FileLibraryAssetType, type Prisma } from '@onlyjs/db/client';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
 import { NotFoundException, UnprocessableEntityException } from '../../../utils';
@@ -8,6 +8,7 @@ import { toAgentHttpError } from '../../../utils/agent-errors';
 import { FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import { FileLibraryAssetsService } from '../service';
+import { pdfService } from './pdf.service';
 
 const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 
@@ -28,10 +29,36 @@ export abstract class OcrService {
       throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
     }
 
-    const image = await fs.promises.readFile(getStoragePath(asset.path));
+    const filePath = getStoragePath(asset.path);
+
+    // PDFs are read with the boilerplate PDF service (text layer), images go to the vision model
+    if (asset.mimeType === FileLibraryAssetMimeType.DOCUMENT_PDF) {
+      const text = await pdfService.extractTextFromFile(filePath);
+      if (!text.trim()) {
+        throw new UnprocessableEntityException(
+          'PDF içinde okunabilir yazı bulunamadı; taranmış PDF desteklenmiyor',
+        );
+      }
+      return { asset, text };
+    }
+
+    const image = await fs.promises.readFile(filePath);
     const mimeType = asset.mimeType.replace('_', '/').toLowerCase();
 
     return { asset, image, mimeType };
+  }
+
+  private static toContent(
+    prompt: string,
+    document: Awaited<ReturnType<typeof this.loadDocument>>,
+  ) {
+    if ('text' in document) {
+      return [{ type: 'text' as const, text: `${prompt}\n\n${document.text}` }];
+    }
+    return [
+      { type: 'text' as const, text: prompt },
+      { type: 'image' as const, image: document.image, mimeType: document.mimeType },
+    ];
   }
 
   private static async saveMetadata(uuid: string, data: Record<string, unknown>) {
@@ -53,24 +80,24 @@ export abstract class OcrService {
 
   static async read(uuid: string) {
     try {
-      const { image, mimeType } = await this.loadDocument(uuid);
+      const document = await this.loadDocument(uuid);
+
+      // A PDF's text is already read by the PDF service, so no AI call is needed
+      if ('text' in document) {
+        const updatedAsset = await this.saveMetadata(uuid, { text: document.text });
+        return FileLibraryAssetFormatter.response(updatedAsset);
+      }
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate([
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: READ_PROMPT },
-            { type: 'image', image, mimeType },
-          ],
-        },
+        { role: 'user', content: this.toContent(READ_PROMPT, document) },
       ]);
 
       const updatedAsset = await this.saveMetadata(uuid, { text: result.text });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw await toAgentHttpError(
+      throw toAgentHttpError(
         error,
         'OcrService.read',
         'Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin',
@@ -80,7 +107,8 @@ export abstract class OcrService {
 
   static async summarize(uuid: string) {
     try {
-      const { asset, image, mimeType } = await this.loadDocument(uuid);
+      const document = await this.loadDocument(uuid);
+      const { asset } = document;
 
       // A saved summary is reused so the same document is not summarized twice
       const metadata = asset.metadata as { summary?: string } | null;
@@ -90,20 +118,14 @@ export abstract class OcrService {
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate([
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: SUMMARY_PROMPT },
-            { type: 'image', image, mimeType },
-          ],
-        },
+        { role: 'user', content: this.toContent(SUMMARY_PROMPT, document) },
       ]);
 
       const updatedAsset = await this.saveMetadata(uuid, { summary: result.text });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw await toAgentHttpError(
+      throw toAgentHttpError(
         error,
         'OcrService.summarize',
         'Yapay zekâ servisi belgeyi özetleyemedi, tekrar deneyin',
@@ -113,19 +135,11 @@ export abstract class OcrService {
 
   static async extract(uuid: string) {
     try {
-      const { image, mimeType } = await this.loadDocument(uuid);
+      const document = await this.loadDocument(uuid);
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(
-        [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: EXTRACT_PROMPT },
-              { type: 'image', image, mimeType },
-            ],
-          },
-        ],
+        [{ role: 'user', content: this.toContent(EXTRACT_PROMPT, document) }],
         {
           structuredOutput: {
             schema: FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
@@ -139,7 +153,7 @@ export abstract class OcrService {
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {
-      throw await toAgentHttpError(
+      throw toAgentHttpError(
         error,
         'OcrService.extract',
         'Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin',

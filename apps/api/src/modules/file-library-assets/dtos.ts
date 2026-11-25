@@ -49,6 +49,7 @@ export const fileLibraryAssetShowDto = {
 export const fileLibraryAssetCreateInputDto = t.Object({
   file: t.File(),
   type: t.Enum(FileLibraryAssetType),
+  title: t.Optional(t.String({ maxLength: 512 })),
 });
 
 export const fileLibraryAssetCreateDto = {
@@ -111,5 +112,13 @@ export const fileLibraryAssetExtractDto = {
   detail: {
     summary: 'Extract',
     description: 'Yüklenmiş OCR belgesinden fatura bilgilerini ayıklar',
+  },
+} satisfies ControllerHook;
+
+export const fileLibraryAssetSummaryDto = {
+  ...fileLibraryAssetOcrDto,
+  detail: {
+    summary: 'Summary',
+    description: 'Yüklenmiş OCR belgesinin özetini çıkarır',
   },
 } satisfies ControllerHook;

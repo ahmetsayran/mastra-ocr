@@ -33,7 +33,7 @@ export const FILE_LIBRARY_ASSET_DOCUMENT_RULES = {
 };
 
 export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
   maxSize: 10 * 1024 * 1024, // 10MB
 };
 

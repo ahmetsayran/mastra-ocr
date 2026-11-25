@@ -10,6 +10,7 @@ import {
   fileLibraryAssetIndexDto,
   fileLibraryAssetOcrDto,
   fileLibraryAssetShowDto,
+  fileLibraryAssetSummaryDto,
   fileLibraryAssetUpdateDto,
 } from './dtos';
 import { FileLibraryAssetFormatter } from './formatters';
@@ -143,6 +144,22 @@ const fileLibraryAssetOcrController = new Elysia({
         getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => {
           return 'OCR ile fatura bilgileri ayıklandı';
+        },
+      }),
+    ),
+  )
+  .post(
+    '/:uuid/summary',
+    async ({ params }) => OcrService.summarize(params.uuid),
+    dtoWithMiddlewares(
+      fileLibraryAssetSummaryDto,
+      withPermission(PERMISSIONS.FILE_LIBRARY_ASSETS.UPDATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.FILE_LIBRARY_ASSET,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => {
+          return 'OCR ile belge özeti çıkarıldı';
         },
       }),
     ),
