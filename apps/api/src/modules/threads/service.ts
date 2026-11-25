@@ -7,7 +7,7 @@ import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processo
 import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
-import { CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
+import { CHAT_HISTORY_LIMIT, CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
 import { RagService } from '../file-library-assets/services/rag.service';
 import type { ThreadCreatePayload, ThreadMessagePayload, ThreadUpdatePayload } from './types';
 
@@ -104,17 +104,27 @@ export abstract class ThreadsService {
     }
   }
 
-  private static async generate(content: string, userId: string) {
+  private static async generate(
+    content: string,
+    userId: string,
+    history: { role: ChatMessageRole; content: string }[],
+  ) {
     try {
+      // Earlier messages go to context, so input guardrails only check the new message
+      const context: { role: 'system' | 'user' | 'assistant'; content: string }[] = history
+        .slice(-CHAT_HISTORY_LIMIT)
+        .map((message) => ({
+          role: message.role === ChatMessageRole.USER ? 'user' : 'assistant',
+          content: message.content,
+        }));
+
       const chunks = await RagService.search(content);
-      const context = chunks.length
-        ? [
-            {
-              role: 'system' as const,
-              content: `Belgelerden ilgili bölümler:\n\n${chunks.map((chunk: { content: string }) => chunk.content).join('\n---\n')}`,
-            },
-          ]
-        : undefined;
+      if (chunks.length) {
+        context.push({
+          role: 'system',
+          content: `Belgelerden ilgili bölümler:\n\n${chunks.map((chunk: { content: string }) => chunk.content).join('\n---\n')}`,
+        });
+      }
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(content, {
@@ -148,7 +158,7 @@ export abstract class ThreadsService {
   static async reply(uuid: string, payload: ThreadMessagePayload, resourceId: string) {
     const thread = await this.show(uuid, resourceId);
 
-    const text = await this.generate(payload.content, resourceId);
+    const text = await this.generate(payload.content, resourceId, thread.messages);
     await this.addMessage(thread.id, ChatMessageRole.USER, payload.content);
     await this.addMessage(thread.id, ChatMessageRole.ASSISTANT, text);
 
