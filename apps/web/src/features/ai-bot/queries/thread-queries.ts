@@ -1,6 +1,7 @@
 import { api } from '#/lib/api';
 import type { ThreadDetailResponse, ThreadShowResponse } from '#backend/modules/threads/types';
 import { queryOptions } from '@tanstack/react-query';
+import { notFound, rootRouteId } from '@tanstack/react-router';
 
 // ====================================================================
 // Query Keys
@@ -9,7 +10,7 @@ export const threadKeys = {
   all: ['threads'] as const,
   lists: () => [...threadKeys.all, 'list'] as const,
   details: () => [...threadKeys.all, 'detail'] as const,
-  detail: (threadId: string) => [...threadKeys.details(), threadId] as const,
+  detail: (uuid: string) => [...threadKeys.details(), uuid] as const,
 };
 
 // ====================================================================
@@ -32,11 +33,16 @@ export const threadsListQueryOptions = () =>
 // ====================================================================
 // 🔍 THREAD DETAIL QUERY
 // ====================================================================
-export const threadDetailQueryOptions = (threadId: string) =>
+export const threadDetailQueryOptions = (uuid: string) =>
   queryOptions({
-    queryKey: threadKeys.detail(threadId),
+    queryKey: threadKeys.detail(uuid),
     queryFn: async () => {
-      const response = await api.threads({ threadId }).get();
+      const response = await api.threads({ uuid }).get();
+
+      // A missing or invalid thread shows the boilerplate not-found page of the root route
+      if (response.status === 404 || response.status === 422) {
+        throw notFound({ routeId: rootRouteId });
+      }
 
       if (response.error) {
         throw new Error('Failed to fetch thread');
@@ -44,5 +50,5 @@ export const threadDetailQueryOptions = (threadId: string) =>
 
       return response.data as ThreadDetailResponse;
     },
-    enabled: !!threadId,
+    enabled: !!uuid,
   });

@@ -12,11 +12,11 @@ const THREAD_TITLE_LENGTH = 50;
 
 // Eden drops SSE/stream chunks that arrive together, so the reply stream is read with fetch
 async function streamThreadMessage(
-  threadId: string,
+  uuid: string,
   content: string,
   onChunk: (chunk: string) => void,
 ) {
-  const response = await fetch(`${env.apiUrl}/threads/${threadId}/messages`, {
+  const response = await fetch(`${env.apiUrl}/threads/${uuid}/messages`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -40,7 +40,7 @@ async function streamThreadMessage(
 // ====================================================================
 // 💬 CHATBOT HOOK
 // ====================================================================
-export function useChatbot(threadId?: string) {
+export function useAiBot(threadId?: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export function useChatbot(threadId?: string) {
       } finally {
         await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
         if (!threadId) {
-          await navigate({ to: '/ai/chatbot/$threadId', params: { threadId: targetThreadId } });
+          await navigate({ to: '/ai/bot/$uuid', params: { uuid: targetThreadId } });
         }
       }
     },
@@ -88,7 +88,11 @@ export function useChatbot(threadId?: string) {
   // ====================================================================
   const addDocument = async (file: File) => {
     try {
-      await createFileLibraryAsset({ file, type: FileLibraryAssetType.OCR_DOCUMENT });
+      await createFileLibraryAsset({
+        file,
+        type: FileLibraryAssetType.OCR_DOCUMENT,
+        title: file.name,
+      });
       toast.success(`Document added: ${file.name}. You can ask about it shortly.`);
     } catch {
       // The error toast comes from the global mutation onError handler

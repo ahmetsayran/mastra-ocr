@@ -67,8 +67,8 @@ export const systemAdminSidebarData: SidebarData = {
           icon: IconFiles,
         },
         {
-          title: 'AI Chatbot',
-          url: '/ai/chatbot',
+          title: 'AI Bot',
+          url: '/ai/bot',
           icon: IconMessageChatbot,
         },
       ],

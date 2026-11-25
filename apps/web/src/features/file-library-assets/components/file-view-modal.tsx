@@ -17,6 +17,7 @@ import {
   FileImage,
   FileText,
   FileVideo,
+  NotebookText,
   Receipt,
   ScanText,
 } from 'lucide-react';
@@ -29,6 +30,8 @@ interface FileViewModalProps {
   isReading: boolean;
   onExtract: (uuid: string) => Promise<void>;
   isExtracting: boolean;
+  onSummarize: (uuid: string) => Promise<void>;
+  isSummarizing: boolean;
 }
 
 const INVOICE_FIELDS: { key: keyof FileLibraryAssetOcrInvoice; label: string }[] = [
@@ -96,6 +99,8 @@ export function FileViewModal({
   isReading,
   onExtract,
   isExtracting,
+  onSummarize,
+  isSummarizing,
 }: FileViewModalProps) {
   if (!asset) return null;
 
@@ -105,6 +110,7 @@ export function FileViewModal({
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
   const invoice: FileLibraryAssetOcrInvoice | undefined = asset.metadata?.invoice;
+  const summary: string | undefined = asset.metadata?.summary;
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -121,7 +127,7 @@ export function FileViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[680px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 pr-8">
             {getFileTypeIcon(asset.fileType)}
@@ -232,12 +238,24 @@ export function FileViewModal({
               )}
             </div>
           )}
+
+          {/* OCR Summary */}
+          {isOcrDocument && (
+            <div className="text-sm">
+              <p className="text-muted-foreground mb-1">Summary</p>
+              {summary ? (
+                <p className="bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">{summary}</p>
+              ) : (
+                <p className="text-muted-foreground italic">Not summarized yet</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 pt-4 border-t">
+        <div className="flex flex-wrap gap-2 pt-4 border-t">
           {isOcrDocument && (
-            <Button variant="outline" onClick={() => onRead(asset.uuid)} disabled={isReading}>
+            <Button variant="outline" size="sm" onClick={() => onRead(asset.uuid)} disabled={isReading}>
               {isReading ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
@@ -252,7 +270,7 @@ export function FileViewModal({
             </Button>
           )}
           {isOcrDocument && (
-            <Button variant="outline" onClick={() => onExtract(asset.uuid)} disabled={isExtracting}>
+            <Button variant="outline" size="sm" onClick={() => onExtract(asset.uuid)} disabled={isExtracting}>
               {isExtracting ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
@@ -266,14 +284,31 @@ export function FileViewModal({
               )}
             </Button>
           )}
-          <Button variant="outline" onClick={handleOpenInNewTab}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Open
-          </Button>
-          <Button onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-2" />
-            Download
-          </Button>
+          {isOcrDocument && (
+            <Button variant="outline" size="sm" onClick={() => onSummarize(asset.uuid)} disabled={isSummarizing}>
+              {isSummarizing ? (
+                <>
+                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                  Summarizing...
+                </>
+              ) : (
+                <>
+                  <NotebookText className="w-4 h-4 mr-2" />
+                  Summarize
+                </>
+              )}
+            </Button>
+          )}
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleOpenInNewTab}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open
+            </Button>
+            <Button size="sm" onClick={handleDownload}>
+              <Download className="w-4 h-4 mr-2" />
+              Download
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

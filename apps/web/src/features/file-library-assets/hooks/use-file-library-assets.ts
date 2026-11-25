@@ -11,6 +11,7 @@ import { fileLibraryAssetKeys, fileLibraryAssetsListQueryOptions } from '../quer
 type CreateFileLibraryAssetInput = {
   file: File;
   type: FileLibraryAssetType;
+  title?: string;
 };
 
 type UpdateFileLibraryAssetInput = {
@@ -45,6 +46,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       const response = await api['file-library-assets'].post({
         file: input.file,
         type: input.type,
+        title: input.title,
       });
 
       if (response.error) {
@@ -156,6 +158,35 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     },
   });
 
+  // ====================================================================
+  // 📝 OCR SUMMARY MUTATION
+  // ====================================================================
+  const ocrSummaryMutation = useMutation({
+    mutationFn: async (uuid: string) => {
+      const response = await api['file-library-assets']({ uuid }).summary.post();
+
+      if (response.error) {
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : 'Failed to summarize file library asset';
+        throw new Error(errorMessage);
+      }
+
+      return response.data;
+    },
+    onSuccess: (_, uuid) => {
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+      toast.success('Summary created successfully');
+    },
+    onError: (error) => {
+      console.error('Failed to summarize file library asset:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to summarize file library asset');
+    },
+  });
+
   return {
     // State
     fileLibraryAssets: fileLibraryAssetsResponse?.data,
@@ -184,5 +215,8 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
 
     extractFileLibraryAsset: ocrExtractMutation.mutateAsync,
     isExtracting: ocrExtractMutation.isPending,
+
+    summarizeFileLibraryAsset: ocrSummaryMutation.mutateAsync,
+    isSummarizing: ocrSummaryMutation.isPending,
   };
 }

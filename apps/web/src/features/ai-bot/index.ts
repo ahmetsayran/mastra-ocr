@@ -1,4 +1,4 @@
-// ai-chatbot feature public exports
+// ai-bot feature public exports
 
 // Pages
 export * from './pages';
