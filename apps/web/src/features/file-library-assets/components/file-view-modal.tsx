@@ -27,6 +27,7 @@ import {
   Download,
   ExternalLink,
   FileImage,
+  FileSpreadsheet,
   FileText,
   FileVideo,
   NotebookText,
@@ -138,6 +139,12 @@ function formatValidationIssue(
   }
 }
 
+// Semicolons and a byte order mark let Excel with Turkish settings open the file with correct columns and letters
+function toCsv(rows: string[][]): string {
+  const quote = (cell: string) => `"${cell.replace(/"/g, '""')}"`;
+  return `\uFEFF${rows.map((row) => row.map(quote).join(';')).join('\r\n')}`;
+}
+
 function formatFileSize(sizeStr: string): string {
   const bytes = parseInt(sizeStr, 10);
   if (isNaN(bytes)) return sizeStr;
@@ -215,6 +222,39 @@ export function FileViewModal({
   }[] = asset.metadata?.extraction?.lineItems ?? [];
   const validation: FileLibraryAssetOcrValidationIssue[] | undefined = asset.metadata?.validation;
   const summary: string | undefined = asset.metadata?.summary;
+
+  const handleDownloadCsv = () => {
+    if (!documentType || !extraction) return;
+
+    const rows = [
+      ['Field', 'Value'],
+      ['Document Type', DOCUMENT_TYPE_LABELS[documentType]],
+      ...EXTRACTION_FIELDS[documentType].map((field) => [
+        field.label,
+        formatExtractionValue(extraction[field.key]),
+      ]),
+      ...(lineItems.length
+        ? [
+            [],
+            ['Description', 'Qty', 'Unit Price', 'Total'],
+            ...lineItems.map((item) => [
+              item.description,
+              formatExtractionValue(item.quantity),
+              formatExtractionValue(item.unitPrice),
+              formatExtractionValue(item.total),
+            ]),
+          ]
+        : []),
+    ];
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }));
+    link.download = `${(asset.title ?? asset.name).replace(/\.[^.]+$/, '')}-extracted-data.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -331,10 +371,16 @@ export function FileViewModal({
                 Extracted Data
                 {documentType && <Badge variant="outline">{DOCUMENT_TYPE_LABELS[documentType]}</Badge>}
                 {documentType && extraction && !isEditing && (
-                  <Button variant="ghost" size="sm" className="ml-auto h-7" onClick={() => setIsEditing(true)}>
-                    <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                    Edit
-                  </Button>
+                  <span className="ml-auto flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-7" onClick={handleDownloadCsv}>
+                      <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5" />
+                      CSV
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7" onClick={() => setIsEditing(true)}>
+                      <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                      Edit
+                    </Button>
+                  </span>
                 )}
               </p>
               {documentType && extraction && isEditing ? (
