@@ -17,10 +17,10 @@ export const fileLibraryAssetResponseDto = t.Composite([
 export const [fileLibraryAssetFiltersDto, getFileLibraryAssetFilters] = prepareFilters(
   FileLibraryAssetPlain,
   {
-    simple: ['name'],
+    simple: ['type'],
     multipleOptions: ['mimeType'],
     date: ['createdAt', 'updatedAt', 'deletedAt'],
-    search: ['name'],
+    search: ['name', 'title'],
   },
   true,
 );

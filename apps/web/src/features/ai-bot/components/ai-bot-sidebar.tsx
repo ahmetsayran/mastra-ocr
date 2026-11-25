@@ -6,6 +6,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarInput,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
@@ -27,10 +28,11 @@ import {
   useFileLibraryAssets,
 } from '#/features/file-library-assets';
 import { useConfirmDialog } from '#/hooks/use-confirm-dialog';
+import { useDebounce } from '#/hooks/use-debounce';
 import type { SidebarResizeHandlers } from '#/hooks/use-sidebar-width';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
 import { FileLibraryAssetType } from '@onlyjs/db/enums';
-import { IconFileText, IconMessage, IconPlus } from '@tabler/icons-react';
+import { IconChevronDown, IconFileText, IconMessage, IconPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { Eye, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -38,6 +40,9 @@ import { useState } from 'react';
 import { useThreads } from '../hooks/use-threads';
 import { threadsListQueryOptions } from '../queries/thread-queries';
 import { ThreadRenameModal } from './thread-rename-modal';
+
+// Records are loaded in pages: chats and documents grow by this many on "Show more"
+const RECORDS_PAGE_SIZE = 20;
 
 type AiBotRecord =
   | { kind: 'thread'; uuid: string; title: string; createdAt: Date }
@@ -65,10 +70,16 @@ export function AiBotSidebar({
   const { setOpenMobile, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const { uuid: threadId } = useParams({ strict: false });
-  const { data: threads } = useQuery(threadsListQueryOptions());
+  const [search, setSearch] = useState('');
+  const [recordsLimit, setRecordsLimit] = useState(RECORDS_PAGE_SIZE);
+  const debouncedSearch = useDebounce(search, 300);
+  const { data: threads } = useQuery(
+    threadsListQueryOptions({ search: debouncedSearch || undefined, perPage: recordsLimit }),
+  );
   const { updateThread, isUpdating: isUpdatingThread, deleteThread } = useThreads();
   const {
     fileLibraryAssets,
+    meta: fileLibraryAssetsMeta,
     updateFileLibraryAsset,
     isUpdating: isUpdatingDocument,
     deleteFileLibraryAsset,
@@ -79,7 +90,11 @@ export function AiBotSidebar({
     isExtracting,
     summarizeFileLibraryAsset,
     isSummarizing,
-  } = useFileLibraryAssets();
+  } = useFileLibraryAssets({
+    type: FileLibraryAssetType.OCR_DOCUMENT,
+    title: debouncedSearch || undefined,
+    perPage: recordsLimit,
+  });
   const [documentUuid, setDocumentUuid] = useState<string | null>(null);
   const [renamingThread, setRenamingThread] = useState<{ uuid: string; title: string } | null>(
     null,
@@ -107,22 +122,22 @@ export function AiBotSidebar({
   const { data: document } = useQuery(fileLibraryAssetDetailQueryOptions(documentUuid ?? ''));
 
   const records: AiBotRecord[] = [
-    ...(threads ?? []).map((thread) => ({
+    ...(threads?.data ?? []).map((thread) => ({
       kind: 'thread' as const,
       uuid: thread.uuid,
       title: thread.title,
       createdAt: new Date(thread.createdAt),
     })),
-    ...(fileLibraryAssets ?? [])
-      .filter((asset) => asset.type === FileLibraryAssetType.OCR_DOCUMENT)
-      .map((asset) => ({
-        kind: 'document' as const,
-        uuid: asset.uuid,
-        title: asset.title ?? asset.name,
-        createdAt: new Date(asset.createdAt),
-        asset,
-      })),
+    ...(fileLibraryAssets ?? []).map((asset) => ({
+      kind: 'document' as const,
+      uuid: asset.uuid,
+      title: asset.title ?? asset.name,
+      createdAt: new Date(asset.createdAt),
+      asset,
+    })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const hasMoreRecords =
+    (threads?.meta.total ?? 0) > recordsLimit || (fileLibraryAssetsMeta?.total ?? 0) > recordsLimit;
 
   return (
     <>
@@ -143,6 +158,12 @@ export function AiBotSidebar({
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          <SidebarInput
+            placeholder="Search records..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-9 text-[15px] group-data-[collapsible=icon]:hidden"
+          />
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -219,6 +240,22 @@ export function AiBotSidebar({
                   </DropdownMenu>
                 </SidebarMenuItem>
               ))}
+              {records.length === 0 && (
+                <p className="text-muted-foreground px-2 py-1.5 text-[15px] group-data-[collapsible=icon]:hidden">
+                  No records found
+                </p>
+              )}
+              {hasMoreRecords && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="text-muted-foreground h-9 text-[15px]"
+                    onClick={() => setRecordsLimit((limit) => limit + RECORDS_PAGE_SIZE)}
+                  >
+                    <IconChevronDown />
+                    <span>Show more</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>

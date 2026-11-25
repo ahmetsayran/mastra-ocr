@@ -1,18 +1,19 @@
 import prisma from '@onlyjs/db';
-import { ChatMessageRole, FileLibraryAssetType } from '@onlyjs/db/client';
+import { ChatMessageRole, FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
 import { RequestContext } from '@mastra/core/request-context';
 import { mastra } from '../../mastra';
 import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processors/chat-guardrails';
 import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
-import { PaginationService, type PaginationQuery } from '../../utils/pagination';
+import { PaginationService } from '../../utils/pagination';
 import { CHAT_HISTORY_LIMIT, CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
 import { FileLibraryAssetsService } from '../file-library-assets';
 import { RagService } from '../file-library-assets/services/rag.service';
 import type {
   ThreadAttachmentPayload,
   ThreadCreatePayload,
+  ThreadIndexQuery,
   ThreadMessagePayload,
   ThreadUpdatePayload,
 } from './types';
@@ -31,10 +32,19 @@ export abstract class ThreadsService {
     throw error;
   }
 
-  static async index(query: PaginationQuery, resourceId: string) {
+  static async index(query: ThreadIndexQuery, resourceId: string) {
     try {
       const { skip, perPage } = PaginationService.getPaginationParams(query);
-      const where = { resourceId, deletedAt: null };
+      const where: Prisma.ThreadWhereInput = {
+        resourceId,
+        deletedAt: null,
+        ...(query.search && {
+          title: {
+            contains: query.search.toLocaleLowerCase('tr'),
+            mode: Prisma.QueryMode.insensitive,
+          },
+        }),
+      };
 
       const [data, total] = await Promise.all([
         prisma.thread.findMany({

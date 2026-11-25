@@ -1,5 +1,5 @@
 import { api } from '#/lib/api';
-import type { ThreadDetailResponse, ThreadShowResponse } from '#backend/modules/threads/types';
+import type { ThreadDetailResponse, ThreadIndexQuery } from '#backend/modules/threads/types';
 import { queryOptions } from '@tanstack/react-query';
 import { notFound, rootRouteId } from '@tanstack/react-router';
 
@@ -9,6 +9,7 @@ import { notFound, rootRouteId } from '@tanstack/react-router';
 export const threadKeys = {
   all: ['threads'] as const,
   lists: () => [...threadKeys.all, 'list'] as const,
+  list: (filters?: ThreadIndexQuery) => [...threadKeys.lists(), filters] as const,
   details: () => [...threadKeys.all, 'detail'] as const,
   detail: (uuid: string) => [...threadKeys.details(), uuid] as const,
 };
@@ -16,17 +17,19 @@ export const threadKeys = {
 // ====================================================================
 // 📋 THREADS LIST QUERY
 // ====================================================================
-export const threadsListQueryOptions = () =>
+export const threadsListQueryOptions = (filters?: ThreadIndexQuery) =>
   queryOptions({
-    queryKey: threadKeys.lists(),
+    queryKey: threadKeys.list(filters),
     queryFn: async () => {
-      const response = await api.threads.get({ query: {} });
+      const response = await api.threads.get({
+        query: filters || {},
+      });
 
       if (response.error) {
         throw new Error('Failed to fetch threads');
       }
 
-      return response.data?.data as ThreadShowResponse[];
+      return response.data;
     },
   });
 

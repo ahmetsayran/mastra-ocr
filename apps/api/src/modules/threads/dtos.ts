@@ -31,7 +31,10 @@ export const threadDetailResponseDto = t.Composite([
 ]);
 
 export const threadIndexDto = {
-  query: paginationQueryDto,
+  query: t.Object({
+    ...paginationQueryDto.properties,
+    search: t.Optional(t.String()),
+  }),
   response: {
     200: paginationResponseDto(threadResponseDto),
   },
