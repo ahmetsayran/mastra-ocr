@@ -54,7 +54,7 @@ export abstract class PostCommentsService {
 
       return { data, total };
     } catch (error) {
-      this.handlePrismaError(error, 'find');
+      throw this.handlePrismaError(error, 'find');
     }
   }
 
@@ -78,7 +78,7 @@ export abstract class PostCommentsService {
 
       return comment;
     } catch (error) {
-      this.handlePrismaError(error, 'find');
+      throw this.handlePrismaError(error, 'find');
     }
   }
 
@@ -100,7 +100,7 @@ export abstract class PostCommentsService {
         },
       });
     } catch (error) {
-      this.handlePrismaError(error, 'create');
+      throw this.handlePrismaError(error, 'create');
     }
   }
 
@@ -125,7 +125,7 @@ export abstract class PostCommentsService {
 
       return comment;
     } catch (error) {
-      this.handlePrismaError(error, 'update');
+      throw this.handlePrismaError(error, 'update');
     }
   }
 
@@ -149,7 +149,7 @@ export abstract class PostCommentsService {
 
       return comment;
     } catch (error) {
-      this.handlePrismaError(error, 'delete');
+      throw this.handlePrismaError(error, 'delete');
     }
   }
 }

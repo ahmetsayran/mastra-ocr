@@ -58,7 +58,7 @@ export abstract class ThreadsService {
 
       return { data, total };
     } catch (error) {
-      this.handlePrismaError(error, 'find');
+      throw this.handlePrismaError(error, 'find');
     }
   }
 
@@ -80,7 +80,7 @@ export abstract class ThreadsService {
 
       return thread;
     } catch (error) {
-      this.handlePrismaError(error, 'find');
+      throw this.handlePrismaError(error, 'find');
     }
   }
 
@@ -90,7 +90,7 @@ export abstract class ThreadsService {
         data: { ...data, resourceId },
       });
     } catch (error) {
-      this.handlePrismaError(error, 'create');
+      throw this.handlePrismaError(error, 'create');
     }
   }
 
@@ -101,7 +101,7 @@ export abstract class ThreadsService {
         data,
       });
     } catch (error) {
-      this.handlePrismaError(error, 'update');
+      throw this.handlePrismaError(error, 'update');
     }
   }
 
@@ -111,7 +111,7 @@ export abstract class ThreadsService {
         where: { uuid, resourceId, deletedAt: null },
       });
     } catch (error) {
-      this.handlePrismaError(error, 'delete');
+      throw this.handlePrismaError(error, 'delete');
     }
   }
 
@@ -133,7 +133,7 @@ export abstract class ThreadsService {
         include: { asset: { select: { uuid: true, name: true, title: true } } },
       });
     } catch (error) {
-      this.handlePrismaError(error, 'create');
+      throw this.handlePrismaError(error, 'create');
     }
   }
 
@@ -143,7 +143,7 @@ export abstract class ThreadsService {
         data: { threadId, role, content },
       });
     } catch (error) {
-      this.handlePrismaError(error, 'create');
+      throw this.handlePrismaError(error, 'create');
     }
   }
 
