@@ -18,14 +18,14 @@ export const listDocumentsTool = createTool({
     const userId = requestContext.get('userId');
     await ensureUserHasPermission({ id: userId }, PERMISSIONS.FILE_LIBRARY_ASSETS.SHOW);
 
-    const { data } = await FileLibraryAssetsService.index({});
-    return data
-      .filter((asset: FileLibraryAsset) => asset.type === FileLibraryAssetType.OCR_DOCUMENT)
-      .map((asset: FileLibraryAsset) => ({
-        uuid: asset.uuid,
-        name: asset.title ?? asset.name,
-        createdAt: asset.createdAt,
-      }));
+    const { data } = await FileLibraryAssetsService.index({
+      type: FileLibraryAssetType.OCR_DOCUMENT,
+    });
+    return data.map((asset: FileLibraryAsset) => ({
+      uuid: asset.uuid,
+      name: asset.title ?? asset.name,
+      createdAt: asset.createdAt,
+    }));
   },
 });
 
