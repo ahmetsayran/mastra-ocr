@@ -6,25 +6,16 @@ import { mastra } from '../../../mastra';
 import { NotFoundException, UnprocessableEntityException } from '../../../utils';
 import { toAgentHttpError } from '../../../utils/agent-errors';
 import {
+  FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT,
   FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
   FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
   FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
+  FILE_LIBRARY_ASSET_OCR_READ_PROMPT,
+  FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT,
 } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
-
-const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
-
-const SUMMARY_PROMPT =
-  'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz.';
-
-const EXTRACT_PROMPT =
-  'Bu faturadaki bilgileri ayıkla. Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
-  'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
-  'Ara toplam KDV hariç tutardır; belgede "Ara Toplam" yazmıyorsa ürün ve hizmet satırlarındaki tutarların toplamını yaz. ' +
-  'Tarihi YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
-  'Belgede gerçekten olmayan bilgi için null yaz.';
 
 export abstract class OcrService {
   private static async loadDocument(uuid: string) {
@@ -107,7 +98,7 @@ export abstract class OcrService {
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate([
-        { role: 'user', content: this.toContent(READ_PROMPT, document) },
+        { role: 'user', content: this.toContent(FILE_LIBRARY_ASSET_OCR_READ_PROMPT, document) },
       ]);
 
       const updatedAsset = await this.saveMetadata(uuid, { text: result.text });
@@ -135,7 +126,7 @@ export abstract class OcrService {
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate([
-        { role: 'user', content: this.toContent(SUMMARY_PROMPT, document) },
+        { role: 'user', content: this.toContent(FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT, document) },
       ]);
 
       const updatedAsset = await this.saveMetadata(uuid, { summary: result.text });
@@ -156,7 +147,12 @@ export abstract class OcrService {
 
       const agent = mastra.getAgent('ocrAgent');
       const result = await agent.generate(
-        [{ role: 'user', content: this.toContent(EXTRACT_PROMPT, document) }],
+        [
+          {
+            role: 'user',
+            content: this.toContent(FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT, document),
+          },
+        ],
         {
           structuredOutput: {
             schema: FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,

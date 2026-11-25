@@ -41,6 +41,18 @@ export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
 export const FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES = 5;
 export const FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE = 2;
 
+export const FILE_LIBRARY_ASSET_OCR_READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
+
+export const FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT =
+  'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz.';
+
+export const FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT =
+  'Bu faturadaki bilgileri ayıkla. Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
+  'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
+  'Ara toplam KDV hariç tutardır; belgede "Ara Toplam" yazmıyorsa ürün ve hizmet satırlarındaki tutarların toplamını yaz. ' +
+  'Tarihi YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
+  'Belgede gerçekten olmayan bilgi için null yaz.';
+
 export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
   invoiceNumber: z.string().nullable().describe('Fatura numarası'),
   invoiceDate: z

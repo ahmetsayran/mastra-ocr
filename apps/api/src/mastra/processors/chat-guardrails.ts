@@ -1,19 +1,5 @@
 import { RegexFilterProcessor, UnicodeNormalizer } from '@mastra/core/processors';
-
-const PROMPT_INJECTION_RULES = [
-  {
-    name: 'ignore-instructions',
-    pattern: /ignore (all |the )?(previous|above|prior) instructions/i,
-  },
-  {
-    name: 'talimatlari-yok-say',
-    pattern: /(önceki|yukarıdaki) (tüm )?talimatları (yok say|unut|görmezden gel)/i,
-  },
-  {
-    name: 'reveal-system-prompt',
-    pattern: /(system prompt|sistem talimat)/i,
-  },
-];
+import { CHAT_PROMPT_INJECTION_RULES } from '../../modules/threads/constants';
 
 export const chatInputProcessors = [
   new UnicodeNormalizer(),
@@ -21,7 +7,7 @@ export const chatInputProcessors = [
     phase: 'input',
     strategy: 'block',
     presets: ['secrets'],
-    rules: PROMPT_INJECTION_RULES,
+    rules: CHAT_PROMPT_INJECTION_RULES,
   }),
 ];
 

@@ -3,7 +3,6 @@ import { dtoWithMiddlewares } from '../../utils';
 import { PaginationService } from '../../utils/pagination';
 import { AuditLogAction, AuditLogEntity, withAuditLog } from '../audit-logs';
 import { auth, dtoWithPermission, PERMISSIONS, withPermission } from '../auth';
-import { CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
 import {
   threadCreateDto,
   threadDestroyDto,
@@ -14,13 +13,6 @@ import {
 } from './dtos';
 import { ThreadFormatter } from './formatters';
 import { ThreadsService } from './service';
-
-async function* streamWords(text: string) {
-  for (const chunk of text.match(/\S+\s*/g) ?? []) {
-    yield chunk;
-    await Bun.sleep(CHAT_STREAM_CHUNK_DELAY_MS);
-  }
-}
 
 const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
   .use(auth())
@@ -107,7 +99,7 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
     async ({ params, body, user }) => {
       // Full buffering: the whole answer is ready before streaming starts
       const text = await ThreadsService.reply(params.uuid, body, user.id);
-      return streamWords(text);
+      return ThreadsService.streamWords(text);
     },
     dtoWithMiddlewares(
       threadMessageDto,

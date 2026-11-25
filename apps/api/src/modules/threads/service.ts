@@ -7,6 +7,7 @@ import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processo
 import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
+import { CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
 import { RagService } from '../file-library-assets/services/rag.service';
 import type { ThreadCreatePayload, ThreadMessagePayload, ThreadUpdatePayload } from './types';
 
@@ -133,6 +134,14 @@ export abstract class ThreadsService {
         'ThreadsService.generate',
         'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
       );
+    }
+  }
+
+  // Streams the buffered answer word by word so it appears as typing
+  static async *streamWords(text: string) {
+    for (const chunk of text.match(/\S+\s*/g) ?? []) {
+      yield chunk;
+      await Bun.sleep(CHAT_STREAM_CHUNK_DELAY_MS);
     }
   }
 
