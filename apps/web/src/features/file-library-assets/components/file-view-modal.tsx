@@ -6,6 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '#/components/ui/table';
 import { env } from '#/config/env';
 import type {
   FileLibraryAssetOcrDocumentType,
@@ -155,6 +163,12 @@ export function FileViewModal({
   const ocrText: string | undefined = asset.metadata?.text;
   const documentType: FileLibraryAssetOcrDocumentType | undefined = asset.metadata?.documentType;
   const extraction: Record<string, unknown> | undefined = asset.metadata?.extraction;
+  const lineItems: {
+    description: string;
+    quantity: number | null;
+    unitPrice: number | null;
+    total: number | null;
+  }[] = asset.metadata?.extraction?.lineItems ?? [];
   const summary: string | undefined = asset.metadata?.summary;
 
   const handleDownload = () => {
@@ -282,6 +296,37 @@ export function FileViewModal({
                       </p>
                     </div>
                   ))}
+                  {lineItems.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground mb-1">Line Items</p>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Description</TableHead>
+                            <TableHead className="text-right">Qty</TableHead>
+                            <TableHead className="text-right">Unit Price</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {lineItems.map((item, index) => (
+                            <TableRow key={`${item.description}-${index}`}>
+                              <TableCell className="whitespace-normal">{item.description}</TableCell>
+                              <TableCell className="text-right">
+                                {formatExtractionValue(item.quantity)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatExtractionValue(item.unitPrice)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatExtractionValue(item.total)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-muted-foreground italic">Not extracted yet</p>

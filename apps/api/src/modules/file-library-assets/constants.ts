@@ -68,6 +68,18 @@ const FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES =
   'Tarihleri YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
   'Belgede gerçekten olmayan bilgi için null yaz.';
 
+// Product and service lines of invoices and receipts
+const lineItems = z
+  .array(
+    z.object({
+      description: z.string().describe('Ürün veya hizmet adı'),
+      quantity: z.number().nonnegative().nullable().describe('Miktar'),
+      unitPrice: z.number().nonnegative().nullable().describe('Birim fiyat'),
+      total: z.number().nonnegative().nullable().describe('Satır tutarı'),
+    }),
+  )
+  .describe('Ürün ve hizmet satırları');
+
 const isoDate = (description: string) =>
   z
     .string()
@@ -92,6 +104,7 @@ export const FILE_LIBRARY_ASSET_OCR_EXTRACTORS = {
       taxAmount: z.number().nonnegative().nullable().describe('KDV tutarı'),
       totalAmount: z.number().nonnegative().nullable().describe('Genel toplam, ödenecek tutar'),
       currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
+      lineItems,
     }),
   },
   receipt: {
@@ -103,6 +116,7 @@ export const FILE_LIBRARY_ASSET_OCR_EXTRACTORS = {
       totalAmount: z.number().nonnegative().nullable().describe('Toplam tutar'),
       paymentMethod: z.string().nullable().describe('Ödeme şekli, örnek nakit veya kredi kartı'),
       currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
+      lineItems,
     }),
   },
   contract: {
