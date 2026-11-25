@@ -15,17 +15,20 @@ import {
 import { IconMessage, IconPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { useSidebarResize } from '../hooks/use-sidebar-resize';
+import type { SidebarResizeHandlers } from '#/hooks/use-sidebar-width';
 import { threadsListQueryOptions } from '../queries/thread-queries';
 
 /**
  * ChatbotSidebar - New chat button and the user's chat threads
  */
-export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { setOpenMobile } = useSidebar();
+export function ChatbotSidebar({
+  onResizeStart,
+  consumeResizeDrag,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & Partial<SidebarResizeHandlers>) {
+  const { setOpenMobile, toggleSidebar } = useSidebar();
   const { threadId } = useParams({ strict: false });
   const { data: threads } = useQuery(threadsListQueryOptions());
-  const { railRef, onPointerDown, onClick } = useSidebarResize();
 
   return (
     <Sidebar collapsible="icon" variant="floating" {...props}>
@@ -70,9 +73,10 @@ export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar
         <NavUser />
       </SidebarFooter>
       <SidebarRail
-        ref={railRef}
-        onPointerDown={onPointerDown}
-        onClick={onClick}
+        onPointerDown={onResizeStart}
+        onClick={() => {
+          if (!consumeResizeDrag?.()) toggleSidebar();
+        }}
         title="Drag to resize, click to toggle"
       />
     </Sidebar>
