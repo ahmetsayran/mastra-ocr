@@ -107,6 +107,7 @@ export function FileViewModal({
   const fileUrl = `${env.apiUrl}/storage/${asset.path}`;
   const isImage = asset.fileType === 'IMAGE';
   const isVideo = asset.fileType === 'VIDEO';
+  const isPdf = asset.mimeType === 'DOCUMENT_PDF';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
   const invoice: FileLibraryAssetOcrInvoice | undefined = asset.metadata?.invoice;
@@ -152,6 +153,8 @@ export function FileViewModal({
               >
                 Your browser does not support the video tag.
               </video>
+            ) : isPdf ? (
+              <iframe src={fileUrl} title={asset.title ?? asset.name} className="w-full h-[300px]" />
             ) : (
               <div className="flex items-center justify-center h-[200px]">
                 {getFileTypeIcon(asset.fileType)}
