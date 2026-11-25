@@ -27,6 +27,7 @@ import {
   fileLibraryAssetDetailQueryOptions,
   useFileLibraryAssets,
 } from '#/features/file-library-assets';
+import { useLanguage } from '#/context/language-context';
 import { useConfirmDialog } from '#/hooks/use-confirm-dialog';
 import { useDebounce } from '#/hooks/use-debounce';
 import type { SidebarResizeHandlers } from '#/hooks/use-sidebar-width';
@@ -69,6 +70,7 @@ export function AiBotSidebar({
 }: React.ComponentProps<typeof Sidebar> & Partial<SidebarResizeHandlers>) {
   const { setOpenMobile, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { uuid: threadId } = useParams({ strict: false });
   const [search, setSearch] = useState('');
   const [recordsLimit, setRecordsLimit] = useState(RECORDS_PAGE_SIZE);
@@ -107,9 +109,10 @@ export function AiBotSidebar({
   );
   const { openDialog: openDeleteThreadDialog, ConfirmDialog: DeleteThreadDialog } =
     useConfirmDialog({
-      title: 'Delete chat?',
-      description: 'This chat and all of its messages will be permanently deleted.',
-      confirmText: 'Delete',
+      title: t('aiBot.deleteChatTitle'),
+      description: t('aiBot.deleteChatDescription'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
       variant: 'destructive',
     });
 
@@ -150,18 +153,18 @@ export function AiBotSidebar({
               <SidebarMenuButton
                 asChild
                 isActive={!threadId}
-                tooltip="New chat"
+                tooltip={t('aiBot.newChat')}
                 className="h-9 text-[15px]"
               >
                 <Link to="/ai/bot" onClick={() => setOpenMobile(false)}>
                   <IconPlus />
-                  <span>New chat</span>
+                  <span>{t('aiBot.newChat')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
           <SidebarInput
-            placeholder="Search records..."
+            placeholder={t('aiBot.searchRecords')}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="h-9 text-[15px] group-data-[collapsible=icon]:hidden"
@@ -169,7 +172,7 @@ export function AiBotSidebar({
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="text-[13px]">Records</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[13px]">{t('aiBot.records')}</SidebarGroupLabel>
             <SidebarMenu>
               {records.map((record) => (
                 <SidebarMenuItem key={record.uuid}>
@@ -207,14 +210,14 @@ export function AiBotSidebar({
                     <DropdownMenuTrigger asChild>
                       <SidebarMenuAction showOnHover className="top-2">
                         <MoreHorizontal />
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">{t('aiBot.openMenu')}</span>
                       </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start">
                       {record.kind === 'document' && (
                         <DropdownMenuItem onClick={() => setDocumentUuid(record.uuid)}>
                           <Eye className="mr-2 h-4 w-4" />
-                          View
+                          {t('aiBot.view')}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
@@ -225,7 +228,7 @@ export function AiBotSidebar({
                         }
                       >
                         <Pencil className="mr-2 h-4 w-4" />
-                        Rename
+                        {t('aiBot.rename')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
@@ -236,7 +239,7 @@ export function AiBotSidebar({
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        {t('common.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -244,7 +247,7 @@ export function AiBotSidebar({
               ))}
               {records.length === 0 && (
                 <p className="text-muted-foreground px-2 py-1.5 text-[15px] group-data-[collapsible=icon]:hidden">
-                  No records found
+                  {t('aiBot.noRecords')}
                 </p>
               )}
               {hasMoreRecords && (
@@ -254,7 +257,7 @@ export function AiBotSidebar({
                     onClick={() => setRecordsLimit((limit) => limit + RECORDS_PAGE_SIZE)}
                   >
                     <IconChevronDown />
-                    <span>Show more</span>
+                    <span>{t('aiBot.showMore')}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
@@ -269,7 +272,7 @@ export function AiBotSidebar({
           onClick={() => {
             if (!consumeResizeDrag?.()) toggleSidebar();
           }}
-          title="Drag to resize, click to toggle"
+          title={t('aiBot.resize')}
         />
       </Sidebar>
 

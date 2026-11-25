@@ -9,6 +9,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { useLanguage } from '#/context/language-context';
 import { Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -28,6 +29,7 @@ export function ThreadRenameModal({
   isSaving = false,
 }: ThreadRenameModalProps) {
   const [title, setTitle] = useState('');
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (thread) {
@@ -52,36 +54,36 @@ export function ThreadRenameModal({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Rename Chat</DialogTitle>
-            <DialogDescription>Give this chat a name that is easy to find.</DialogDescription>
+            <DialogTitle>{t('thread.renameTitle')}</DialogTitle>
+            <DialogDescription>{t('thread.renameDescription')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2 py-4">
-            <Label htmlFor="thread-title">Title</Label>
+            <Label htmlFor="thread-title">{t('common.title')}</Label>
             <Input
               id="thread-title"
               value={title}
               maxLength={255}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Chat title"
+              placeholder={t('thread.titlePlaceholder')}
               autoFocus
             />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSaving}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={!title.trim() || isSaving}>
               {isSaving ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                  Saving...
+                  {t('common.saving')}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  {t('common.saveChanges')}
                 </>
               )}
             </Button>

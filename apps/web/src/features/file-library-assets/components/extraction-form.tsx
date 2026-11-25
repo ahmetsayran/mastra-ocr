@@ -2,12 +2,14 @@ import { Button } from '#/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '#/components/ui/form';
 import { Input } from '#/components/ui/input';
 import { Textarea } from '#/components/ui/textarea';
+import type { TranslationKey } from '#/config/translations';
+import { useLanguage } from '#/context/language-context';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 export type ExtractionField = {
   key: string;
-  label: string;
+  label: TranslationKey;
   kind: 'text' | 'number' | 'date' | 'list';
 };
 
@@ -54,6 +56,7 @@ export function ExtractionForm({
   onCancel,
   isSaving = false,
 }: ExtractionFormProps) {
+  const { t } = useLanguage();
   const lineItems = (extraction.lineItems as Record<string, unknown>[] | undefined) ?? [];
 
   const form = useForm<ExtractionFormValues>({
@@ -104,10 +107,10 @@ export function ExtractionForm({
               name={`fields.${field.key}`}
               render={({ field: input }) => (
                 <FormItem className={field.kind === 'list' ? 'col-span-2' : undefined}>
-                  <FormLabel>{field.label}</FormLabel>
+                  <FormLabel>{t(field.label)}</FormLabel>
                   <FormControl>
                     {field.kind === 'list' ? (
-                      <Textarea {...input} rows={3} placeholder="One item per line" />
+                      <Textarea {...input} rows={3} placeholder={t('field.listPlaceholder')} />
                     ) : (
                       <Input
                         {...input}
@@ -130,36 +133,36 @@ export function ExtractionForm({
 
         {hasLineItems && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Line Items</p>
+            <p className="text-sm font-medium">{t('field.lineItems')}</p>
             {lineItemsArray.fields.map((item, index) => (
               <div key={item.id} className="grid grid-cols-[1fr_70px_90px_90px_auto] gap-2">
                 <Input
                   {...form.register(`lineItems.${index}.description`)}
-                  placeholder="Description"
+                  placeholder={t('field.description')}
                 />
                 <Input
                   {...form.register(`lineItems.${index}.quantity`)}
                   type="number"
                   step="any"
-                  placeholder="Qty"
+                  placeholder={t('field.quantity')}
                 />
                 <Input
                   {...form.register(`lineItems.${index}.unitPrice`)}
                   type="number"
                   step="any"
-                  placeholder="Unit Price"
+                  placeholder={t('field.unitPrice')}
                 />
                 <Input
                   {...form.register(`lineItems.${index}.total`)}
                   type="number"
                   step="any"
-                  placeholder="Total"
+                  placeholder={t('field.total')}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  title="Remove line"
+                  title={t('field.removeLine')}
                   onClick={() => lineItemsArray.remove(index)}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -175,25 +178,25 @@ export function ExtractionForm({
               }
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Line
+              {t('field.addLine')}
             </Button>
           </div>
         )}
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isSaving}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" size="sm" disabled={isSaving}>
             {isSaving ? (
               <>
                 <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Saving...
+                {t('common.saving')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {t('common.saveChanges')}
               </>
             )}
           </Button>

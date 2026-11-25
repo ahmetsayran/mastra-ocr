@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '#/components/ui/alert-dialog';
+import { useLanguage } from '#/context/language-context';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
 import { Trash2 } from 'lucide-react';
 
@@ -26,6 +27,8 @@ export function FileDeleteModal({
   onConfirm,
   isDeleting = false,
 }: FileDeleteModalProps) {
+  const { t } = useLanguage();
+
   const handleConfirm = async () => {
     if (!asset) return;
     await onConfirm(asset.uuid);
@@ -38,18 +41,14 @@ export function FileDeleteModal({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <Trash2 className="w-5 h-5 text-destructive" />
-            Delete File
+            {t('file.deleteTitle')}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete{' '}
-            <span className="font-medium text-foreground">
-              {asset?.title || asset?.name}
-            </span>
-            ? This action cannot be undone and the file will be permanently removed.
+            {t('file.deleteDescription', { name: asset?.title || asset?.name || '' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isDeleting}
@@ -58,12 +57,12 @@ export function FileDeleteModal({
             {isDeleting ? (
               <>
                 <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Deleting...
+                {t('common.deleting')}
               </>
             ) : (
               <>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                {t('common.delete')}
               </>
             )}
           </AlertDialogAction>

@@ -9,10 +9,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import { useLanguage } from '#/context/language-context';
 import { useNavUser } from '#/hooks/use-nav-user';
 
 export function ProfileDropdown() {
   const { userName, userEmail, userAvatar, userInitials, handleLogout } = useNavUser();
+  const { t } = useLanguage();
 
   return (
     <DropdownMenu modal={false}>
@@ -33,7 +35,7 @@ export function ProfileDropdown() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
-          Log out
+          {t('common.logOut')}
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

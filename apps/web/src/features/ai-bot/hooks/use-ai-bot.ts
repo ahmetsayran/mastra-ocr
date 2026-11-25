@@ -1,4 +1,5 @@
 import { env } from '#/config/env';
+import { useLanguage } from '#/context/language-context';
 import { useFileLibraryAssets } from '#/features/file-library-assets';
 import { api } from '#/lib/api';
 import { FileLibraryAssetType } from '@onlyjs/db/enums';
@@ -15,6 +16,7 @@ async function streamThreadMessage(
   uuid: string,
   content: string,
   onChunk: (chunk: string) => void,
+  failedMessage: string,
 ) {
   const response = await fetch(`${env.apiUrl}/threads/${uuid}/messages`, {
     method: 'POST',
@@ -25,7 +27,7 @@ async function streamThreadMessage(
 
   if (!response.ok || !response.body) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.message ?? 'Failed to send message');
+    throw new Error(error?.message ?? failedMessage);
   }
 
   const reader = response.body.getReader();
@@ -38,10 +40,10 @@ async function streamThreadMessage(
 }
 
 // The first message or document of a new chat creates the thread
-async function createThread(title: string) {
+async function createThread(title: string, failedMessage: string) {
   const response = await api.threads.post({ title: title.slice(0, THREAD_TITLE_LENGTH) });
   if (response.error) {
-    throw new Error('Failed to create thread');
+    throw new Error(failedMessage);
   }
   return response.data.uuid;
 }
@@ -52,6 +54,7 @@ async function createThread(title: string) {
 export function useAiBot(threadId?: string) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [streamedReply, setStreamedReply] = useState('');
   const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
@@ -61,14 +64,17 @@ export function useAiBot(threadId?: string) {
       setPendingMessage(content);
       setStreamedReply('');
 
-      const targetThreadId = threadId ?? (await createThread(content));
+      const targetThreadId = threadId ?? (await createThread(content, t('aiBot.createFailed')));
       if (!threadId) {
         queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
       }
 
       try {
-        await streamThreadMessage(targetThreadId, content, (chunk) =>
-          setStreamedReply((reply) => reply + chunk),
+        await streamThreadMessage(
+          targetThreadId,
+          content,
+          (chunk) => setStreamedReply((reply) => reply + chunk),
+          t('aiBot.sendFailed'),
         );
       } finally {
         await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
@@ -78,7 +84,7 @@ export function useAiBot(threadId?: string) {
       }
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to send message');
+      toast.error(error instanceof Error ? error.message : t('aiBot.sendFailed'));
     },
     onSettled: () => {
       setPendingMessage(null);
@@ -91,7 +97,7 @@ export function useAiBot(threadId?: string) {
   // ====================================================================
   const attachMutation = useMutation({
     mutationFn: async ({ assetUuid, title }: { assetUuid: string; title: string }) => {
-      const targetThreadId = threadId ?? (await createThread(title));
+      const targetThreadId = threadId ?? (await createThread(title, t('aiBot.createFailed')));
 
       const response = await api.threads({ uuid: targetThreadId }).attachments.post({ assetUuid });
       if (response.error) {
@@ -99,7 +105,7 @@ export function useAiBot(threadId?: string) {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to add document to chat';
+            : t('aiBot.attachFailed');
         throw new Error(errorMessage);
       }
 
@@ -108,13 +114,13 @@ export function useAiBot(threadId?: string) {
     onSuccess: async (targetThreadId, { title }) => {
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
       await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
-      toast.success(`Document added: ${title}. You can ask about it shortly.`);
+      toast.success(t('aiBot.attached', { title }));
       if (!threadId) {
         await navigate({ to: '/ai/bot/$uuid', params: { uuid: targetThreadId } });
       }
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to add document to chat');
+      toast.error(error instanceof Error ? error.message : t('aiBot.attachFailed'));
     },
   });
 

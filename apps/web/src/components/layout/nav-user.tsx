@@ -14,11 +14,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '#/components/ui/sidebar';
+import { useLanguage } from '#/context/language-context';
 import { useNavUser } from '#/hooks/use-nav-user';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { userName, userEmail, userAvatar, userInitials, handleLogout } = useNavUser();
+  const { t } = useLanguage();
 
   return (
     <SidebarMenu>
@@ -62,7 +64,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              Log out
+              {t('common.logOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

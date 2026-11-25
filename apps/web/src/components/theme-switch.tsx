@@ -7,11 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import { useLanguage } from '#/context/language-context';
 import { useTheme } from '#/context/theme-context';
 import { cn } from '#/lib/utils';
 
 export function ThemeSwitch() {
   const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
 
   /* Update theme-color meta tag
    * when theme is updated */
@@ -27,19 +29,20 @@ export function ThemeSwitch() {
         <Button variant="ghost" size="icon" className="scale-95 rounded-full">
           <IconSun className="size-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
           <IconMoon className="absolute size-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t('common.toggleTheme')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')}>
-          Light <IconCheck size={14} className={cn('ml-auto', theme !== 'light' && 'hidden')} />
+          {t('common.light')}
+          <IconCheck size={14} className={cn('ml-auto', theme !== 'light' && 'hidden')} />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')}>
-          Dark
+          {t('common.dark')}
           <IconCheck size={14} className={cn('ml-auto', theme !== 'dark' && 'hidden')} />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
-          System
+          {t('common.system')}
           <IconCheck size={14} className={cn('ml-auto', theme !== 'system' && 'hidden')} />
         </DropdownMenuItem>
       </DropdownMenuContent>

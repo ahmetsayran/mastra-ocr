@@ -1,3 +1,4 @@
+import { useLanguage } from '#/context/language-context';
 import { api } from '#/lib/api';
 import type { ThreadUpdatePayload } from '#backend/modules/threads/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import { threadKeys } from '../queries/thread-queries';
 // ====================================================================
 export function useThreads() {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // ====================================================================
   // ✏️ UPDATE
@@ -22,7 +24,7 @@ export function useThreads() {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to update chat';
+            : t('thread.renameFailed');
         throw new Error(errorMessage);
       }
 
@@ -31,11 +33,11 @@ export function useThreads() {
     onSuccess: (_, { uuid }) => {
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
       queryClient.invalidateQueries({ queryKey: threadKeys.detail(uuid) });
-      toast.success('Chat renamed successfully');
+      toast.success(t('thread.renamed'));
     },
     onError: (error) => {
       console.error('Failed to update chat:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update chat');
+      toast.error(error instanceof Error ? error.message : t('thread.renameFailed'));
     },
   });
 
@@ -51,7 +53,7 @@ export function useThreads() {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to delete chat';
+            : t('thread.deleteFailed');
         throw new Error(errorMessage);
       }
 
@@ -59,11 +61,11 @@ export function useThreads() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
-      toast.success('Chat deleted successfully');
+      toast.success(t('thread.deleted'));
     },
     onError: (error) => {
       console.error('Failed to delete chat:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete chat');
+      toast.error(error instanceof Error ? error.message : t('thread.deleteFailed'));
     },
   });
 

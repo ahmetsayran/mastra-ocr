@@ -15,6 +15,8 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { env } from '#/config/env';
+import type { TranslationKey } from '#/config/translations';
+import { useLanguage } from '#/context/language-context';
 import { useEffect, useState } from 'react';
 import type {
   FileLibraryAssetOcrDocumentType,
@@ -51,56 +53,48 @@ interface FileViewModalProps {
   isUpdatingExtraction: boolean;
 }
 
-const DOCUMENT_TYPE_LABELS: Record<FileLibraryAssetOcrDocumentType, string> = {
-  invoice: 'Invoice',
-  receipt: 'Receipt',
-  contract: 'Contract',
-  id_card: 'ID Card',
-  other: 'Other',
-};
-
 // Fields shown for each document type, in the order of the API extraction schemas
 const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, ExtractionField[]> = {
   invoice: [
-    { key: 'invoiceNumber', label: 'Invoice No', kind: 'text' },
-    { key: 'invoiceDate', label: 'Date', kind: 'date' },
-    { key: 'sellerName', label: 'Seller', kind: 'text' },
-    { key: 'buyerName', label: 'Buyer', kind: 'text' },
-    { key: 'subtotal', label: 'Subtotal', kind: 'number' },
-    { key: 'taxAmount', label: 'VAT', kind: 'number' },
-    { key: 'totalAmount', label: 'Total', kind: 'number' },
-    { key: 'currency', label: 'Currency', kind: 'text' },
+    { key: 'invoiceNumber', label: 'field.invoiceNumber', kind: 'text' },
+    { key: 'invoiceDate', label: 'field.date', kind: 'date' },
+    { key: 'sellerName', label: 'field.seller', kind: 'text' },
+    { key: 'buyerName', label: 'field.buyer', kind: 'text' },
+    { key: 'subtotal', label: 'field.subtotal', kind: 'number' },
+    { key: 'taxAmount', label: 'field.vat', kind: 'number' },
+    { key: 'totalAmount', label: 'field.total', kind: 'number' },
+    { key: 'currency', label: 'field.currency', kind: 'text' },
   ],
   receipt: [
-    { key: 'storeName', label: 'Store', kind: 'text' },
-    { key: 'receiptDate', label: 'Date', kind: 'date' },
-    { key: 'taxAmount', label: 'VAT', kind: 'number' },
-    { key: 'totalAmount', label: 'Total', kind: 'number' },
-    { key: 'paymentMethod', label: 'Payment', kind: 'text' },
-    { key: 'currency', label: 'Currency', kind: 'text' },
+    { key: 'storeName', label: 'field.store', kind: 'text' },
+    { key: 'receiptDate', label: 'field.date', kind: 'date' },
+    { key: 'taxAmount', label: 'field.vat', kind: 'number' },
+    { key: 'totalAmount', label: 'field.total', kind: 'number' },
+    { key: 'paymentMethod', label: 'field.payment', kind: 'text' },
+    { key: 'currency', label: 'field.currency', kind: 'text' },
   ],
   contract: [
-    { key: 'contractTitle', label: 'Contract', kind: 'text' },
-    { key: 'parties', label: 'Parties', kind: 'list' },
-    { key: 'startDate', label: 'Start Date', kind: 'date' },
-    { key: 'endDate', label: 'End Date', kind: 'date' },
-    { key: 'amount', label: 'Amount', kind: 'number' },
-    { key: 'currency', label: 'Currency', kind: 'text' },
-    { key: 'paymentTerms', label: 'Payment Terms', kind: 'text' },
+    { key: 'contractTitle', label: 'field.contract', kind: 'text' },
+    { key: 'parties', label: 'field.parties', kind: 'list' },
+    { key: 'startDate', label: 'field.startDate', kind: 'date' },
+    { key: 'endDate', label: 'field.endDate', kind: 'date' },
+    { key: 'amount', label: 'field.amount', kind: 'number' },
+    { key: 'currency', label: 'field.currency', kind: 'text' },
+    { key: 'paymentTerms', label: 'field.paymentTerms', kind: 'text' },
   ],
   id_card: [
-    { key: 'fullName', label: 'Full Name', kind: 'text' },
-    { key: 'idNumber', label: 'ID Number', kind: 'text' },
-    { key: 'birthDate', label: 'Birth Date', kind: 'date' },
-    { key: 'nationality', label: 'Nationality', kind: 'text' },
-    { key: 'documentNumber', label: 'Document No', kind: 'text' },
-    { key: 'expiryDate', label: 'Expiry Date', kind: 'date' },
+    { key: 'fullName', label: 'field.fullName', kind: 'text' },
+    { key: 'idNumber', label: 'field.idNumber', kind: 'text' },
+    { key: 'birthDate', label: 'field.birthDate', kind: 'date' },
+    { key: 'nationality', label: 'field.nationality', kind: 'text' },
+    { key: 'documentNumber', label: 'field.documentNumber', kind: 'text' },
+    { key: 'expiryDate', label: 'field.expiryDate', kind: 'date' },
   ],
   other: [
-    { key: 'title', label: 'Title', kind: 'text' },
-    { key: 'documentDate', label: 'Date', kind: 'date' },
-    { key: 'issuer', label: 'Issuer', kind: 'text' },
-    { key: 'keyPoints', label: 'Key Points', kind: 'list' },
+    { key: 'title', label: 'common.title', kind: 'text' },
+    { key: 'documentDate', label: 'field.date', kind: 'date' },
+    { key: 'issuer', label: 'field.issuer', kind: 'text' },
+    { key: 'keyPoints', label: 'field.keyPoints', kind: 'list' },
   ],
 };
 
@@ -115,28 +109,13 @@ function formatExtractionValue(value: unknown): string {
 function formatValidationIssue(
   issue: FileLibraryAssetOcrValidationIssue,
   documentType: FileLibraryAssetOcrDocumentType,
+  t: ReturnType<typeof useLanguage>['t'],
 ): string {
-  const label =
-    EXTRACTION_FIELDS[documentType].find((field) => field.key === issue.field)?.label ?? 'Date';
+  const label: TranslationKey =
+    EXTRACTION_FIELDS[documentType].find((field) => field.key === issue.field)?.label ??
+    'field.date';
 
-  switch (issue.code) {
-    case 'TOTAL_MISMATCH':
-      return `Subtotal + VAT is ${issue.expected}, but the total is ${issue.actual}`;
-    case 'LINE_ITEMS_MISMATCH':
-      return `Line items add up to ${issue.actual}, expected ${issue.expected}`;
-    case 'LINE_TOTAL_MISMATCH':
-      return `Line ${issue.line}: quantity × unit price is ${issue.expected}, but the line total is ${issue.actual}`;
-    case 'INVALID_DATE':
-      return `${label} is not a valid date`;
-    case 'FUTURE_DATE':
-      return `${label} is in the future`;
-    case 'DATE_ORDER':
-      return 'End date is before the start date';
-    case 'INVALID_ID_NUMBER':
-      return 'ID number is not a valid Turkish ID number';
-    case 'EXPIRED':
-      return 'The document has expired';
-  }
+  return t(`validation.${issue.code}`, { ...issue, field: t(label) });
 }
 
 // Semicolons and a byte order mark let Excel with Turkish settings open the file with correct columns and letters
@@ -198,6 +177,7 @@ export function FileViewModal({
   isUpdatingExtraction,
 }: FileViewModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const { language, t } = useLanguage();
 
   // Editing closes when another document is opened
   useEffect(() => {
@@ -227,16 +207,16 @@ export function FileViewModal({
     if (!documentType || !extraction) return;
 
     const rows = [
-      ['Field', 'Value'],
-      ['Document Type', DOCUMENT_TYPE_LABELS[documentType]],
+      [t('field.field'), t('field.value')],
+      [t('field.documentType'), t(`documentType.${documentType}`)],
       ...EXTRACTION_FIELDS[documentType].map((field) => [
-        field.label,
+        t(field.label),
         formatExtractionValue(extraction[field.key]),
       ]),
       ...(lineItems.length
         ? [
             [],
-            ['Description', 'Qty', 'Unit Price', 'Total'],
+            [t('field.description'), t('field.quantity'), t('field.unitPrice'), t('field.total')],
             ...lineItems.map((item) => [
               item.description,
               formatExtractionValue(item.quantity),
@@ -249,7 +229,7 @@ export function FileViewModal({
 
     const link = document.createElement('a');
     link.href = URL.createObjectURL(new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' }));
-    link.download = `${(asset.title ?? asset.name).replace(/\.[^.]+$/, '')}-extracted-data.csv`;
+    link.download = `${(asset.title ?? asset.name).replace(/\.[^.]+$/, '')}-${t('file.csvName')}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -294,14 +274,14 @@ export function FileViewModal({
                 controls
                 className="w-full h-auto max-h-[300px]"
               >
-                Your browser does not support the video tag.
+                {t('file.videoNotSupported')}
               </video>
             ) : isPdf ? (
               <iframe src={fileUrl} title={asset.title ?? asset.name} className="w-full h-[300px]" />
             ) : (
               <div className="flex items-center justify-center h-[200px]">
                 {getFileTypeIcon(asset.fileType)}
-                <span className="ml-2 text-muted-foreground">Preview not available</span>
+                <span className="ml-2 text-muted-foreground">{t('file.previewNotAvailable')}</span>
               </div>
             )}
           </div>
@@ -309,45 +289,45 @@ export function FileViewModal({
           {/* File Details */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground">Filename</p>
+              <p className="text-muted-foreground">{t('file.filename')}</p>
               <p className="font-medium truncate" title={asset.name}>{asset.name}</p>
             </div>
             {asset.title && (
               <div>
-                <p className="text-muted-foreground">Title</p>
+                <p className="text-muted-foreground">{t('common.title')}</p>
                 <p className="font-medium">{asset.title}</p>
               </div>
             )}
             <div>
-              <p className="text-muted-foreground">Type</p>
+              <p className="text-muted-foreground">{t('file.type')}</p>
               <Badge variant="outline" className="mt-1">
                 {asset.type.replace(/_/g, ' ')}
               </Badge>
             </div>
             <div>
-              <p className="text-muted-foreground">File Type</p>
+              <p className="text-muted-foreground">{t('file.fileType')}</p>
               <Badge variant="secondary" className={`mt-1 ${getFileTypeBadgeVariant(asset.fileType)}`}>
                 {asset.fileType}
               </Badge>
             </div>
             <div>
-              <p className="text-muted-foreground">MIME Type</p>
+              <p className="text-muted-foreground">{t('file.mimeType')}</p>
               <p className="font-mono text-xs">{asset.mimeType.replace(/_/g, '/')}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Size</p>
+              <p className="text-muted-foreground">{t('file.size')}</p>
               <p className="font-medium">{formatFileSize(asset.size)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Created</p>
+              <p className="text-muted-foreground">{t('file.created')}</p>
               <p className="font-medium">
-                {new Date(asset.createdAt).toLocaleString()}
+                {new Date(asset.createdAt).toLocaleString(language)}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground">Updated</p>
+              <p className="text-muted-foreground">{t('file.updated')}</p>
               <p className="font-medium">
-                {new Date(asset.updatedAt).toLocaleString()}
+                {new Date(asset.updatedAt).toLocaleString(language)}
               </p>
             </div>
           </div>
@@ -355,11 +335,11 @@ export function FileViewModal({
           {/* OCR Text */}
           {isOcrDocument && (
             <div className="text-sm">
-              <p className="text-muted-foreground mb-1">Read Text</p>
+              <p className="text-muted-foreground mb-1">{t('file.readText')}</p>
               {ocrText ? (
                 <p className="bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">{ocrText}</p>
               ) : (
-                <p className="text-muted-foreground italic">Not read yet</p>
+                <p className="text-muted-foreground italic">{t('file.notRead')}</p>
               )}
             </div>
           )}
@@ -368,8 +348,8 @@ export function FileViewModal({
           {isOcrDocument && (
             <div className="text-sm">
               <p className="text-muted-foreground mb-1 flex items-center gap-2">
-                Extracted Data
-                {documentType && <Badge variant="outline">{DOCUMENT_TYPE_LABELS[documentType]}</Badge>}
+                {t('file.extractedData')}
+                {documentType && <Badge variant="outline">{t(`documentType.${documentType}`)}</Badge>}
                 {documentType && extraction && !isEditing && (
                   <span className="ml-auto flex gap-1">
                     <Button variant="ghost" size="sm" className="h-7" onClick={handleDownloadCsv}>
@@ -378,7 +358,7 @@ export function FileViewModal({
                     </Button>
                     <Button variant="ghost" size="sm" className="h-7" onClick={() => setIsEditing(true)}>
                       <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                      Edit
+                      {t('file.edit')}
                     </Button>
                   </span>
                 )}
@@ -399,7 +379,7 @@ export function FileViewModal({
                 <div className="grid grid-cols-2 gap-4 bg-muted rounded-lg p-3">
                   {EXTRACTION_FIELDS[documentType].map((field) => (
                     <div key={field.key}>
-                      <p className="text-muted-foreground">{field.label}</p>
+                      <p className="text-muted-foreground">{t(field.label)}</p>
                       <p className="font-medium break-words">
                         {formatExtractionValue(extraction[field.key])}
                       </p>
@@ -407,14 +387,14 @@ export function FileViewModal({
                   ))}
                   {lineItems.length > 0 && (
                     <div className="col-span-2">
-                      <p className="text-muted-foreground mb-1">Line Items</p>
+                      <p className="text-muted-foreground mb-1">{t('field.lineItems')}</p>
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Qty</TableHead>
-                            <TableHead className="text-right">Unit Price</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
+                            <TableHead>{t('field.description')}</TableHead>
+                            <TableHead className="text-right">{t('field.quantity')}</TableHead>
+                            <TableHead className="text-right">{t('field.unitPrice')}</TableHead>
+                            <TableHead className="text-right">{t('field.total')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -440,21 +420,21 @@ export function FileViewModal({
                     (validation.length === 0 ? (
                       <p className="col-span-2 flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                         <CircleCheck className="w-4 h-4" />
-                        All checks passed
+                        {t('validation.passed')}
                       </p>
                     ) : (
                       <ul className="col-span-2 space-y-1 text-amber-600 dark:text-amber-400">
                         {validation.map((issue, index) => (
                           <li key={`${issue.code}-${index}`} className="flex items-start gap-2">
                             <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" />
-                            {formatValidationIssue(issue, documentType)}
+                            {formatValidationIssue(issue, documentType, t)}
                           </li>
                         ))}
                       </ul>
                     ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground italic">Not extracted yet</p>
+                <p className="text-muted-foreground italic">{t('file.notExtracted')}</p>
               )}
             </div>
           )}
@@ -462,11 +442,11 @@ export function FileViewModal({
           {/* OCR Summary */}
           {isOcrDocument && (
             <div className="text-sm">
-              <p className="text-muted-foreground mb-1">Summary</p>
+              <p className="text-muted-foreground mb-1">{t('file.summary')}</p>
               {summary ? (
                 <p className="bg-muted rounded-lg p-3 whitespace-pre-wrap break-words">{summary}</p>
               ) : (
-                <p className="text-muted-foreground italic">Not summarized yet</p>
+                <p className="text-muted-foreground italic">{t('file.notSummarized')}</p>
               )}
             </div>
           )}
@@ -479,12 +459,12 @@ export function FileViewModal({
               {isReading ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
-                  Reading...
+                  {t('file.reading')}
                 </>
               ) : (
                 <>
                   <ScanText className="w-4 h-4 mr-2" />
-                  Read Text
+                  {t('file.readText')}
                 </>
               )}
             </Button>
@@ -494,12 +474,12 @@ export function FileViewModal({
               {isExtracting ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
-                  Extracting...
+                  {t('file.extracting')}
                 </>
               ) : (
                 <>
                   <Receipt className="w-4 h-4 mr-2" />
-                  Extract Data
+                  {t('file.extractData')}
                 </>
               )}
             </Button>
@@ -509,12 +489,12 @@ export function FileViewModal({
               {isSummarizing ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
-                  Summarizing...
+                  {t('file.summarizing')}
                 </>
               ) : (
                 <>
                   <NotebookText className="w-4 h-4 mr-2" />
-                  Summarize
+                  {t('file.summarize')}
                 </>
               )}
             </Button>
@@ -522,11 +502,11 @@ export function FileViewModal({
           <div className="ml-auto flex gap-2">
             <Button variant="outline" size="sm" onClick={handleOpenInNewTab}>
               <ExternalLink className="w-4 h-4 mr-2" />
-              Open
+              {t('file.open')}
             </Button>
             <Button size="sm" onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
-              Download
+              {t('file.download')}
             </Button>
           </div>
         </div>

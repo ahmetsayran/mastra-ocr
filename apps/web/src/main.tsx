@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 // Generated Routes
 import { handleServerError } from '#/utils/handle-server-error';
 import { FontProvider } from './context/font-context';
+import { LanguageProvider } from './context/language-context';
 import { ThemeProvider } from './context/theme-context';
 import './styles/index.css';
 import { routeTree } from './routeTree.gen';
@@ -67,7 +68,9 @@ if (!rootElement.innerHTML) {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <FontProvider>
-            <RouterProvider router={router} />
+            <LanguageProvider>
+              <RouterProvider router={router} />
+            </LanguageProvider>
           </FontProvider>
         </ThemeProvider>
       </QueryClientProvider>

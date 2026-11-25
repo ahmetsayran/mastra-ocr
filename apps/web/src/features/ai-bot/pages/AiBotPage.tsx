@@ -1,8 +1,10 @@
 import { Header } from '#/components/layout/header';
 import { Main } from '#/components/layout/main';
+import { LanguageSwitch } from '#/components/language-switch';
 import { ProfileDropdown } from '#/components/profile-dropdown';
 import { ThemeSwitch } from '#/components/theme-switch';
 import { Button } from '#/components/ui/button';
+import { useLanguage } from '#/context/language-context';
 import { cn } from '#/lib/utils';
 import { IconArrowUp, IconFileText, IconPaperclip, IconSparkles } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -27,6 +29,7 @@ type ChatBubble = {
 export default function AiBotPage() {
   const { uuid: threadId } = useParams({ strict: false });
   const [message, setMessage] = useState('');
+  const { t } = useLanguage();
   const { data: thread } = useQuery({ ...threadDetailQueryOptions(threadId ?? '') });
   const { sendMessage, isSending, pendingMessage, streamedReply, addDocument, isAddingDocument } =
     useAiBot(threadId);
@@ -63,9 +66,10 @@ export default function AiBotPage() {
       {/* ===== Top Heading ===== */}
       <Header>
         <h1 className="truncate text-[15px] font-medium">
-          {threadId ? (thread?.title ?? '') : 'New chat'}
+          {threadId ? (thread?.title ?? '') : t('aiBot.newChat')}
         </h1>
         <div className="ml-auto flex items-center space-x-4">
+          <LanguageSwitch />
           <ThemeSwitch />
           <ProfileDropdown />
         </div>
@@ -78,10 +82,9 @@ export default function AiBotPage() {
             {bubbles.length === 0 && (
               <div className="m-auto flex max-w-md flex-col items-center gap-3 text-center">
                 <IconSparkles size={32} className="text-muted-foreground" />
-                <h2 className="text-2xl font-semibold">How can I help you?</h2>
+                <h2 className="text-2xl font-semibold">{t('aiBot.emptyTitle')}</h2>
                 <p className="text-muted-foreground text-[15px] leading-relaxed">
-                  Ask a question, or attach an image or PDF to read its text, extract invoice data
-                  or get a summary.
+                  {t('aiBot.emptyDescription')}
                 </p>
               </div>
             )}
@@ -103,7 +106,9 @@ export default function AiBotPage() {
                       <span className="font-medium">
                         {bubble.document.title ?? bubble.document.name}
                       </span>
-                      <span className="text-muted-foreground text-xs">Document added to chat</span>
+                      <span className="text-muted-foreground text-xs">
+                        {t('aiBot.documentAdded')}
+                      </span>
                     </span>
                   </span>
                 ) : bubble.role === 'USER' ? (
@@ -118,7 +123,7 @@ export default function AiBotPage() {
                       bubble.role === 'USER' && 'text-right',
                     )}
                   >
-                    {format(bubble.createdAt, 'h:mm a')}
+                    {format(bubble.createdAt, t('aiBot.timeFormat'))}
                   </span>
                 )}
               </div>
@@ -141,17 +146,17 @@ export default function AiBotPage() {
               variant="ghost"
               size="icon"
               className="rounded-full"
-              title="Add image or PDF"
+              title={t('aiBot.addDocument')}
               onClick={() => fileInputRef.current?.click()}
               disabled={isAddingDocument}
             >
               <IconPaperclip size={20} />
             </Button>
             <label className="flex-1">
-              <span className="sr-only">Message</span>
+              <span className="sr-only">{t('aiBot.message')}</span>
               <input
                 type="text"
-                placeholder="Message AI Bot..."
+                placeholder={t('aiBot.messagePlaceholder')}
                 className="placeholder:text-muted-foreground h-10 w-full bg-transparent text-[15px] focus-visible:outline-hidden"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
@@ -162,15 +167,13 @@ export default function AiBotPage() {
               type="submit"
               size="icon"
               className="rounded-full"
-              title="Send"
+              title={t('aiBot.send')}
               disabled={isSending || !message.trim()}
             >
               <IconArrowUp size={20} />
             </Button>
           </div>
-          <p className="text-muted-foreground mt-2 text-center text-xs">
-            Supports JPG, PNG, WEBP and PDF. AI answers can be wrong; check important details.
-          </p>
+          <p className="text-muted-foreground mt-2 text-center text-xs">{t('aiBot.footer')}</p>
         </form>
       </Main>
     </>

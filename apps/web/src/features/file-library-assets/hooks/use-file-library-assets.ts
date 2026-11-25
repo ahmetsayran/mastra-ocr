@@ -1,3 +1,4 @@
+import { useLanguage } from '#/context/language-context';
 import { api } from '#/lib/api';
 import type { FileLibraryAssetIndexQuery } from '#backend/modules/file-library-assets/types';
 import { FileLibraryAssetType } from '@onlyjs/db/client';
@@ -25,6 +26,7 @@ type UpdateFileLibraryAssetInput = {
 // ====================================================================
 export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   // ====================================================================
   // 📋 GET LIST (with pagination)
@@ -110,7 +112,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to read file library asset';
+            : t('file.readFailed');
         throw new Error(errorMessage);
       }
 
@@ -119,11 +121,11 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, uuid) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
-      toast.success('Text read successfully');
+      toast.success(t('file.readSuccess'));
     },
     onError: (error) => {
       console.error('Failed to read file library asset:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to read file library asset');
+      toast.error(error instanceof Error ? error.message : t('file.readFailed'));
     },
   });
 
@@ -139,7 +141,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to extract file library asset data';
+            : t('file.extractFailed');
         throw new Error(errorMessage);
       }
 
@@ -148,13 +150,11 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, uuid) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
-      toast.success('Data extracted successfully');
+      toast.success(t('file.extractSuccess'));
     },
     onError: (error) => {
       console.error('Failed to extract file library asset data:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to extract file library asset data',
-      );
+      toast.error(error instanceof Error ? error.message : t('file.extractFailed'));
     },
   });
 
@@ -170,7 +170,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to summarize file library asset';
+            : t('file.summaryFailed');
         throw new Error(errorMessage);
       }
 
@@ -179,11 +179,11 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, uuid) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
-      toast.success('Summary created successfully');
+      toast.success(t('file.summarySuccess'));
     },
     onError: (error) => {
       console.error('Failed to summarize file library asset:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to summarize file library asset');
+      toast.error(error instanceof Error ? error.message : t('file.summaryFailed'));
     },
   });
 
@@ -199,7 +199,7 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
             ? String(errorValue.message)
-            : 'Failed to update extracted data';
+            : t('file.extractionSaveFailed');
         throw new Error(errorMessage);
       }
 
@@ -208,11 +208,11 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, { uuid }) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
-      toast.success('Extracted data saved');
+      toast.success(t('file.extractionSaved'));
     },
     onError: (error) => {
       console.error('Failed to update extracted data:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update extracted data');
+      toast.error(error instanceof Error ? error.message : t('file.extractionSaveFailed'));
     },
   });
 
