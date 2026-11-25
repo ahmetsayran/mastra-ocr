@@ -1,5 +1,9 @@
 import { ChatMessagePlain, ChatMessagePlainInputCreate } from '@onlyjs/db/prismabox/ChatMessage';
-import { ThreadPlain, ThreadPlainInputCreate } from '@onlyjs/db/prismabox/Thread';
+import {
+  ThreadPlain,
+  ThreadPlainInputCreate,
+  ThreadPlainInputUpdate,
+} from '@onlyjs/db/prismabox/Thread';
 import { t } from 'elysia';
 import { type ControllerHook, errorResponseDto, uuidValidation } from '../../utils';
 import { paginationQueryDto, paginationResponseDto } from '../../utils/pagination';
@@ -35,7 +39,7 @@ export const threadCreateDto = {
 
 export const threadShowDto = {
   params: t.Object({
-    threadId: uuidValidation,
+    uuid: uuidValidation,
   }),
   response: { 200: threadDetailResponseDto, 404: errorResponseDto[404] },
   detail: {
@@ -44,9 +48,30 @@ export const threadShowDto = {
   },
 } satisfies ControllerHook;
 
+export const threadUpdateDto = {
+  params: t.Object({
+    uuid: uuidValidation,
+  }),
+  body: ThreadPlainInputUpdate,
+  response: { 200: threadResponseDto, 404: errorResponseDto[404], 422: errorResponseDto[422] },
+  detail: {
+    summary: 'Update',
+    description: 'Sohbetin başlığını günceller',
+  },
+} satisfies ControllerHook;
+
+export const threadDestroyDto = {
+  ...threadShowDto,
+  response: { 200: t.Object({ message: t.String() }), 404: errorResponseDto[404] },
+  detail: {
+    summary: 'Destroy',
+    description: 'Sohbeti ve mesajlarını siler',
+  },
+} satisfies ControllerHook;
+
 export const threadMessageDto = {
   params: t.Object({
-    threadId: uuidValidation,
+    uuid: uuidValidation,
   }),
   body: t.Pick(ChatMessagePlainInputCreate, ['content']),
   response: {

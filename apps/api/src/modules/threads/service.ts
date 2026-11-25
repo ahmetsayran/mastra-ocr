@@ -8,10 +8,13 @@ import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
 import { RagService } from '../file-library-assets/services/rag.service';
-import type { ThreadCreatePayload, ThreadMessagePayload } from './types';
+import type { ThreadCreatePayload, ThreadMessagePayload, ThreadUpdatePayload } from './types';
 
 export abstract class ThreadsService {
-  private static handlePrismaError(error: unknown, context: 'find' | 'create'): never {
+  private static handlePrismaError(
+    error: unknown,
+    context: 'find' | 'create' | 'update' | 'delete',
+  ): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Sohbet bulunamadı');
@@ -42,10 +45,10 @@ export abstract class ThreadsService {
     }
   }
 
-  static async show(threadId: string, resourceId: string) {
+  static async show(uuid: string, resourceId: string) {
     try {
       const thread = await prisma.thread.findFirst({
-        where: { uuid: threadId, resourceId, deletedAt: null },
+        where: { uuid, resourceId, deletedAt: null },
         include: { messages: { orderBy: { createdAt: 'asc' } } },
       });
 
@@ -66,6 +69,27 @@ export abstract class ThreadsService {
       });
     } catch (error) {
       this.handlePrismaError(error, 'create');
+    }
+  }
+
+  static async update(uuid: string, data: ThreadUpdatePayload, resourceId: string) {
+    try {
+      return await prisma.thread.update({
+        where: { uuid, resourceId, deletedAt: null },
+        data,
+      });
+    } catch (error) {
+      this.handlePrismaError(error, 'update');
+    }
+  }
+
+  static async destroy(uuid: string, resourceId: string) {
+    try {
+      return await prisma.thread.delete({
+        where: { uuid, resourceId, deletedAt: null },
+      });
+    } catch (error) {
+      this.handlePrismaError(error, 'delete');
     }
   }
 
@@ -104,7 +128,7 @@ export abstract class ThreadsService {
       }
       return result.text;
     } catch (error) {
-      throw await toAgentHttpError(
+      throw toAgentHttpError(
         error,
         'ThreadsService.generate',
         'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
@@ -112,8 +136,8 @@ export abstract class ThreadsService {
     }
   }
 
-  static async reply(threadId: string, payload: ThreadMessagePayload, resourceId: string) {
-    const thread = await this.show(threadId, resourceId);
+  static async reply(uuid: string, payload: ThreadMessagePayload, resourceId: string) {
+    const thread = await this.show(uuid, resourceId);
 
     const text = await this.generate(payload.content, resourceId);
     await this.addMessage(thread.id, ChatMessageRole.USER, payload.content);

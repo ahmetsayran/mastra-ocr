@@ -5,10 +5,15 @@ import type { ThreadDetailResponse, ThreadShowResponse } from './types';
 
 export abstract class ThreadFormatter {
   static response(data: Thread) {
-    return BaseFormatter.convertData<ThreadShowResponse>(data, threadResponseDto);
+    const convertedData = BaseFormatter.convertData<ThreadShowResponse>(data, threadResponseDto);
+    return convertedData;
   }
 
   static detail(data: Thread & { messages: ChatMessage[] }) {
-    return BaseFormatter.convertData<ThreadDetailResponse>(data, threadDetailResponseDto);
+    const convertedData = BaseFormatter.convertData<ThreadDetailResponse>(
+      data,
+      threadDetailResponseDto,
+    );
+    return convertedData;
   }
 }

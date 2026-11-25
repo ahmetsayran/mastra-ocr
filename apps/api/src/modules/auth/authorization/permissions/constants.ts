@@ -440,6 +440,16 @@ export const PERMISSIONS = {
       description: 'Sohbet Oluştur ve Mesaj Gönder',
       scopes: [GLOBAL],
     },
+    UPDATE: {
+      key: 'threads:update',
+      description: 'Sohbet Güncelle',
+      scopes: [GLOBAL],
+    },
+    DESTROY: {
+      key: 'threads:destroy',
+      description: 'Sohbet Sil',
+      scopes: [GLOBAL],
+    },
   },
 } as const satisfies Record<string, Record<string, GenericPermissionObject>>;
 

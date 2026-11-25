@@ -4,7 +4,14 @@ import { PaginationService } from '../../utils/pagination';
 import { AuditLogAction, AuditLogEntity, withAuditLog } from '../audit-logs';
 import { auth, dtoWithPermission, PERMISSIONS, withPermission } from '../auth';
 import { CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
-import { threadCreateDto, threadIndexDto, threadMessageDto, threadShowDto } from './dtos';
+import {
+  threadCreateDto,
+  threadDestroyDto,
+  threadIndexDto,
+  threadMessageDto,
+  threadShowDto,
+  threadUpdateDto,
+} from './dtos';
 import { ThreadFormatter } from './formatters';
 import { ThreadsService } from './service';
 
@@ -31,9 +38,9 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
     dtoWithPermission(threadIndexDto, PERMISSIONS.THREADS.SHOW),
   )
   .get(
-    '/:threadId',
+    '/:uuid',
     async ({ params, user }) => {
-      const thread = await ThreadsService.show(params.threadId, user.id);
+      const thread = await ThreadsService.show(params.uuid, user.id);
       return ThreadFormatter.detail(thread);
     },
     dtoWithPermission(threadShowDto, PERMISSIONS.THREADS.SHOW),
@@ -59,11 +66,47 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
       }),
     ),
   )
+  .put(
+    '/:uuid',
+    async ({ params, body, user }) => {
+      const thread = await ThreadsService.update(params.uuid, body, user.id);
+      return ThreadFormatter.response(thread);
+    },
+    dtoWithMiddlewares(
+      threadUpdateDto,
+      withPermission(PERMISSIONS.THREADS.UPDATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.THREAD,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: ({ body }) =>
+          `Sohbet güncellendi: ${Object.keys(body as object).join(', ')}`,
+        getMetadata: ({ body }) => ({ updatedFields: body }),
+      }),
+    ),
+  )
+  .delete(
+    '/:uuid',
+    async ({ params, user }) => {
+      await ThreadsService.destroy(params.uuid, user.id);
+      return { message: 'Sohbet başarıyla silindi' };
+    },
+    dtoWithMiddlewares(
+      threadDestroyDto,
+      withPermission(PERMISSIONS.THREADS.DESTROY),
+      withAuditLog({
+        actionType: AuditLogAction.DELETE,
+        entityType: AuditLogEntity.THREAD,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => 'Sohbet silindi',
+      }),
+    ),
+  )
   .post(
-    '/:threadId/messages',
+    '/:uuid/messages',
     async ({ params, body, user }) => {
       // Full buffering: the whole answer is ready before streaming starts
-      const text = await ThreadsService.reply(params.threadId, body, user.id);
+      const text = await ThreadsService.reply(params.uuid, body, user.id);
       return streamWords(text);
     },
     dtoWithMiddlewares(
@@ -72,7 +115,7 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
       withAuditLog({
         actionType: AuditLogAction.UPDATE,
         entityType: AuditLogEntity.THREAD,
-        getEntityUuid: ({ params }) => params.threadId!,
+        getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => 'Sohbete mesaj gönderildi',
       }),
     ),
