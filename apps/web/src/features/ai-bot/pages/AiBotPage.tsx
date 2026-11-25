@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
+import { MarkdownMessage } from '../components/markdown-message';
 import { useAiBot } from '../hooks/use-ai-bot';
 import { threadDetailQueryOptions } from '../queries/thread-queries';
 
@@ -66,7 +67,7 @@ export default function AiBotPage() {
       <Main fixed className="py-0">
         {/* Conversation */}
         <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
-          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 py-6">
+          <div className="mx-auto flex min-h-full w-full max-w-3xl shrink-0 flex-col gap-6 py-6">
             {bubbles.length === 0 && (
               <div className="m-auto flex max-w-md flex-col items-center gap-3 text-center">
                 <IconSparkles size={32} className="text-muted-foreground" />
@@ -81,14 +82,18 @@ export default function AiBotPage() {
               <div
                 key={bubble.key}
                 className={cn(
-                  'text-[15px] leading-7 break-words whitespace-pre-wrap',
+                  'text-[15px] leading-7 break-words',
                   bubble.role === 'USER'
-                    ? 'bg-secondary max-w-[80%] self-end rounded-2xl px-4 py-2.5'
-                    : 'self-start',
+                    ? 'bg-secondary max-w-[80%] self-end rounded-2xl px-4 py-2.5 whitespace-pre-wrap'
+                    : 'max-w-full self-start',
                   bubble.key === 'streaming' && !streamedReply && 'animate-pulse',
                 )}
               >
-                {bubble.content}
+                {bubble.role === 'USER' ? (
+                  bubble.content
+                ) : (
+                  <MarkdownMessage content={bubble.content} />
+                )}
                 {bubble.createdAt && (
                   <span
                     className={cn(
