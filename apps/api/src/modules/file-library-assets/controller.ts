@@ -144,7 +144,7 @@ const fileLibraryAssetOcrController = new Elysia({
         entityType: AuditLogEntity.FILE_LIBRARY_ASSET,
         getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => {
-          return 'OCR ile fatura bilgileri ayıklandı';
+          return 'OCR ile belge bilgileri ayıklandı';
         },
       }),
     ),
