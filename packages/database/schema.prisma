@@ -582,6 +582,7 @@ model FileLibraryAsset {
 
   user           User[]
   documentChunks DocumentChunk[] @relation("DocumentChunkToFileLibraryAsset")
+  chatMessages   ChatMessage[]   @relation("ChatMessageToFileLibraryAsset")
 
   @@map("file_library_assets")
 }
@@ -774,9 +775,15 @@ model ChatMessage {
   /// @prismabox.options{minLength:1}
   content String @db.Text
 
+  // Document attached to the chat with this message (null for plain messages)
+  asset   FileLibraryAsset? @relation("ChatMessageToFileLibraryAsset", fields: [assetId], references: [id], onDelete: SetNull)
+  /// @prismabox.hide
+  assetId Int?              @map("asset_id")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([threadId])
+  @@index([assetId])
   @@map("chat_messages")
 }
 

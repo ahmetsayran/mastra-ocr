@@ -10,10 +10,23 @@ import { paginationQueryDto, paginationResponseDto } from '../../utils/paginatio
 
 export const threadResponseDto = ThreadPlain;
 
+export const threadMessageResponseDto = t.Composite([
+  ChatMessagePlain,
+  t.Object({
+    asset: t.Nullable(
+      t.Object({
+        uuid: t.String(),
+        name: t.String(),
+        title: t.Nullable(t.String()),
+      }),
+    ),
+  }),
+]);
+
 export const threadDetailResponseDto = t.Composite([
   ThreadPlain,
   t.Object({
-    messages: t.Array(ChatMessagePlain),
+    messages: t.Array(threadMessageResponseDto),
   }),
 ]);
 
@@ -66,6 +79,24 @@ export const threadDestroyDto = {
   detail: {
     summary: 'Destroy',
     description: 'Sohbeti ve mesajlarını siler',
+  },
+} satisfies ControllerHook;
+
+export const threadAttachmentDto = {
+  params: t.Object({
+    uuid: uuidValidation,
+  }),
+  body: t.Object({
+    assetUuid: uuidValidation,
+  }),
+  response: {
+    200: threadMessageResponseDto,
+    404: errorResponseDto[404],
+    422: errorResponseDto[422],
+  },
+  detail: {
+    summary: 'Attachment',
+    description: 'Sohbete bir OCR belgesi ekler',
   },
 } satisfies ControllerHook;
 

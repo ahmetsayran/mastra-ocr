@@ -4,7 +4,7 @@ import { ProfileDropdown } from '#/components/profile-dropdown';
 import { ThemeSwitch } from '#/components/theme-switch';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
-import { IconArrowUp, IconPaperclip, IconSparkles } from '@tabler/icons-react';
+import { IconArrowUp, IconFileText, IconPaperclip, IconSparkles } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { format } from 'date-fns';
@@ -16,7 +16,13 @@ import { threadDetailQueryOptions } from '../queries/thread-queries';
 // Same MIME types the API accepts for OCR documents
 const DOCUMENT_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
 
-type ChatBubble = { key: string; role: 'USER' | 'ASSISTANT'; content: string; createdAt?: Date };
+type ChatBubble = {
+  key: string;
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  createdAt?: Date;
+  document?: { name: string; title: string | null };
+};
 
 export default function AiBotPage() {
   const { uuid: threadId } = useParams({ strict: false });
@@ -31,6 +37,7 @@ export default function AiBotPage() {
     role: msg.role,
     content: msg.content,
     createdAt: new Date(msg.createdAt),
+    document: msg.asset ?? undefined,
   }));
   if (pendingMessage) {
     bubbles.push({ key: 'pending', role: 'USER', content: pendingMessage });
@@ -89,7 +96,17 @@ export default function AiBotPage() {
                   bubble.key === 'streaming' && !streamedReply && 'animate-pulse',
                 )}
               >
-                {bubble.role === 'USER' ? (
+                {bubble.document ? (
+                  <span className="flex items-center gap-3">
+                    <IconFileText size={28} className="text-muted-foreground shrink-0" />
+                    <span className="flex flex-col leading-5">
+                      <span className="font-medium">
+                        {bubble.document.title ?? bubble.document.name}
+                      </span>
+                      <span className="text-muted-foreground text-xs">Document added to chat</span>
+                    </span>
+                  </span>
+                ) : bubble.role === 'USER' ? (
                   bubble.content
                 ) : (
                   <MarkdownMessage content={bubble.content} />

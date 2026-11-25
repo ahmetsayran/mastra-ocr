@@ -1,5 +1,5 @@
 import prisma from '@onlyjs/db';
-import { ChatMessageRole } from '@onlyjs/db/client';
+import { ChatMessageRole, FileLibraryAssetType } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
 import { RequestContext } from '@mastra/core/request-context';
 import { mastra } from '../../mastra';
@@ -8,8 +8,14 @@ import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService, type PaginationQuery } from '../../utils/pagination';
 import { CHAT_HISTORY_LIMIT, CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
+import { FileLibraryAssetsService } from '../file-library-assets';
 import { RagService } from '../file-library-assets/services/rag.service';
-import type { ThreadCreatePayload, ThreadMessagePayload, ThreadUpdatePayload } from './types';
+import type {
+  ThreadAttachmentPayload,
+  ThreadCreatePayload,
+  ThreadMessagePayload,
+  ThreadUpdatePayload,
+} from './types';
 
 export abstract class ThreadsService {
   private static handlePrismaError(
@@ -50,7 +56,12 @@ export abstract class ThreadsService {
     try {
       const thread = await prisma.thread.findFirst({
         where: { uuid, resourceId, deletedAt: null },
-        include: { messages: { orderBy: { createdAt: 'asc' } } },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            include: { asset: { select: { id: true, uuid: true, name: true, title: true } } },
+          },
+        },
       });
 
       if (!thread) {
@@ -94,6 +105,28 @@ export abstract class ThreadsService {
     }
   }
 
+  static async attach(uuid: string, { assetUuid }: ThreadAttachmentPayload, resourceId: string) {
+    const thread = await this.show(uuid, resourceId);
+    const asset = await FileLibraryAssetsService.show(assetUuid);
+    if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
+      throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
+    }
+
+    try {
+      return await prisma.chatMessage.create({
+        data: {
+          threadId: thread.id,
+          role: ChatMessageRole.USER,
+          content: asset.title ?? asset.name,
+          assetId: asset.id,
+        },
+        include: { asset: { select: { uuid: true, name: true, title: true } } },
+      });
+    } catch (error) {
+      this.handlePrismaError(error, 'create');
+    }
+  }
+
   private static async addMessage(threadId: number, role: ChatMessageRole, content: string) {
     try {
       await prisma.chatMessage.create({
@@ -107,7 +140,11 @@ export abstract class ThreadsService {
   private static async generate(
     content: string,
     userId: string,
-    history: { role: ChatMessageRole; content: string }[],
+    history: {
+      role: ChatMessageRole;
+      content: string;
+      asset: { id: number; uuid: string; name: string; title: string | null } | null;
+    }[],
   ) {
     try {
       // Earlier messages go to context, so input guardrails only check the new message
@@ -115,10 +152,16 @@ export abstract class ThreadsService {
         .slice(-CHAT_HISTORY_LIMIT)
         .map((message) => ({
           role: message.role === ChatMessageRole.USER ? 'user' : 'assistant',
-          content: message.content,
+          content: message.asset
+            ? `[Sohbete belge eklendi: ${message.asset.title ?? message.asset.name} (uuid: ${message.asset.uuid})]`
+            : message.content,
         }));
 
-      const chunks = await RagService.search(content);
+      // Documents attached to this chat are searched first; otherwise all documents
+      const attachedAssetIds = history.flatMap((message) =>
+        message.asset ? [message.asset.id] : [],
+      );
+      const chunks = await RagService.search(content, attachedAssetIds);
       if (chunks.length) {
         context.push({
           role: 'system',

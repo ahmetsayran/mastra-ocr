@@ -37,6 +37,15 @@ async function streamThreadMessage(
   }
 }
 
+// The first message or document of a new chat creates the thread
+async function createThread(title: string) {
+  const response = await api.threads.post({ title: title.slice(0, THREAD_TITLE_LENGTH) });
+  if (response.error) {
+    throw new Error('Failed to create thread');
+  }
+  return response.data.uuid;
+}
+
 // ====================================================================
 // 💬 CHATBOT HOOK
 // ====================================================================
@@ -52,14 +61,8 @@ export function useAiBot(threadId?: string) {
       setPendingMessage(content);
       setStreamedReply('');
 
-      // First message of a new chat creates the thread
-      let targetThreadId = threadId;
-      if (!targetThreadId) {
-        const response = await api.threads.post({ title: content.slice(0, THREAD_TITLE_LENGTH) });
-        if (response.error) {
-          throw new Error('Failed to create thread');
-        }
-        targetThreadId = response.data.uuid;
+      const targetThreadId = threadId ?? (await createThread(content));
+      if (!threadId) {
         queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
       }
 
@@ -84,19 +87,53 @@ export function useAiBot(threadId?: string) {
   });
 
   // ====================================================================
+  // 📎 ATTACH DOCUMENT (links an uploaded document to the chat)
+  // ====================================================================
+  const attachMutation = useMutation({
+    mutationFn: async ({ assetUuid, title }: { assetUuid: string; title: string }) => {
+      const targetThreadId = threadId ?? (await createThread(title));
+
+      const response = await api.threads({ uuid: targetThreadId }).attachments.post({ assetUuid });
+      if (response.error) {
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : 'Failed to add document to chat';
+        throw new Error(errorMessage);
+      }
+
+      return targetThreadId;
+    },
+    onSuccess: async (targetThreadId, { title }) => {
+      queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
+      toast.success(`Document added: ${title}. You can ask about it shortly.`);
+      if (!threadId) {
+        await navigate({ to: '/ai/bot/$uuid', params: { uuid: targetThreadId } });
+      }
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to add document to chat');
+    },
+  });
+
+  // ====================================================================
   // 📎 ADD DOCUMENT (saved to the file library as an OCR document)
   // ====================================================================
   const addDocument = async (file: File) => {
+    let asset: { uuid: string };
     try {
-      await createFileLibraryAsset({
+      asset = await createFileLibraryAsset({
         file,
         type: FileLibraryAssetType.OCR_DOCUMENT,
         title: file.name,
       });
-      toast.success(`Document added: ${file.name}. You can ask about it shortly.`);
     } catch {
       // The error toast comes from the global mutation onError handler
+      return;
     }
+    attachMutation.mutate({ assetUuid: asset.uuid, title: file.name });
   };
 
   return {
@@ -105,6 +142,6 @@ export function useAiBot(threadId?: string) {
     pendingMessage,
     streamedReply,
     addDocument,
-    isAddingDocument: isCreating,
+    isAddingDocument: isCreating || attachMutation.isPending,
   };
 }

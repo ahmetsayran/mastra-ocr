@@ -1,5 +1,5 @@
 import prisma from '@onlyjs/db';
-import { FileLibraryAssetType } from '@onlyjs/db/client';
+import { FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
 import { randomUUID } from 'crypto';
 import { documentEmbedder } from '../../../mastra/embedders/document-embedder';
 import {
@@ -88,14 +88,17 @@ export abstract class RagService {
     })();
   }
 
-  static async search(query: string) {
+  static async search(query: string, assetIds: number[] = []) {
     const [vector] = await this.embed([query]);
+    const assetFilter = assetIds.length
+      ? Prisma.sql`AND a."id" IN (${Prisma.join(assetIds)})`
+      : Prisma.empty;
 
     return prisma.$queryRaw<{ content: string }[]>`
       SELECT c."content"
       FROM "document_chunks" c
       JOIN "file_library_assets" a ON a."id" = c."asset_id"
-      WHERE a."deleted_at" IS NULL
+      WHERE a."deleted_at" IS NULL ${assetFilter}
       ORDER BY c."embedding" <=> ${this.toVector(vector!)}::vector
       LIMIT ${FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT}
     `;

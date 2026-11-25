@@ -4,6 +4,7 @@ import { PaginationService } from '../../utils/pagination';
 import { AuditLogAction, AuditLogEntity, withAuditLog } from '../audit-logs';
 import { auth, dtoWithPermission, PERMISSIONS, withPermission } from '../auth';
 import {
+  threadAttachmentDto,
   threadCreateDto,
   threadDestroyDto,
   threadIndexDto,
@@ -91,6 +92,23 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
         entityType: AuditLogEntity.THREAD,
         getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => 'Sohbet silindi',
+      }),
+    ),
+  )
+  .post(
+    '/:uuid/attachments',
+    async ({ params, body, user }) => {
+      const message = await ThreadsService.attach(params.uuid, body, user.id);
+      return ThreadFormatter.message(message);
+    },
+    dtoWithMiddlewares(
+      threadAttachmentDto,
+      withPermission(PERMISSIONS.THREADS.CREATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.THREAD,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => 'Sohbete belge eklendi',
       }),
     ),
   )
