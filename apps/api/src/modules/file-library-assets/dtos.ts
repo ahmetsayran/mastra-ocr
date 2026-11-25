@@ -22,6 +22,7 @@ export const [fileLibraryAssetFiltersDto, getFileLibraryAssetFilters] = prepareF
     date: ['createdAt', 'updatedAt', 'deletedAt'],
     search: ['name'],
   },
+  true,
 );
 
 export const fileLibraryAssetIndexDto = {
