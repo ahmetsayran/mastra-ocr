@@ -160,6 +160,14 @@ export const FILE_LIBRARY_ASSET_OCR_AMOUNT_TOLERANCE = 0.05;
 
 export const FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE = 1000; // characters
 export const FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT = 3;
+// Chunks sent to the embedding model in one request
+export const FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE = 50;
+
+// Longer document text is summarized part by part, and extraction uses its beginning and end
+export const FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE = 20000; // characters
+
+export const FILE_LIBRARY_ASSET_OCR_PART_SUMMARY_PROMPT =
+  'Bu metin uzun bir belgenin bir bölümüdür. Bu bölümdeki önemli bilgileri, tutarları ve tarihleri Türkçe olarak kısaca özetle.';
 
 export const FILE_LIBRARY_ASSET_TYPE_RULES = {
   //PRODUCT_IMAGE

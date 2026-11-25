@@ -8,3 +8,4 @@ export * from './http-errors';
 export * from './middleware-utils';
 export * from './pagination';
 export * from './service-helpers';
+export * from './text-helpers';

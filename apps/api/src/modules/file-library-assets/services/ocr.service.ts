@@ -1,18 +1,25 @@
 import fs from 'fs';
 import prisma from '@onlyjs/db';
-import { FileLibraryAssetMimeType, FileLibraryAssetType, type Prisma } from '@onlyjs/db/client';
+import {
+  type FileLibraryAsset,
+  FileLibraryAssetMimeType,
+  FileLibraryAssetType,
+  type Prisma,
+} from '@onlyjs/db/client';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
-import { NotFoundException, UnprocessableEntityException } from '../../../utils';
+import { NotFoundException, splitText, UnprocessableEntityException } from '../../../utils';
 import { toAgentHttpError } from '../../../utils/agent-errors';
 import {
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT,
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA,
   FILE_LIBRARY_ASSET_OCR_EXTRACTORS,
   FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
+  FILE_LIBRARY_ASSET_OCR_PART_SUMMARY_PROMPT,
   FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
   FILE_LIBRARY_ASSET_OCR_READ_PROMPT,
   FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT,
+  FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE,
 } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import type { z } from 'zod';
@@ -25,8 +32,13 @@ import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
 import { ValidationService } from './validation.service';
 
+// A document is read either as text (PDF text layer) or as images (photos, scanned PDF pages)
+type OcrDocument =
+  | { asset: FileLibraryAsset; text: string }
+  | { asset: FileLibraryAsset; images: { image: Buffer; mimeType: string }[] };
+
 export abstract class OcrService {
-  private static async loadDocument(uuid: string) {
+  private static async loadDocument(uuid: string): Promise<OcrDocument> {
     const asset = await FileLibraryAssetsService.show(uuid);
     if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
       throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
@@ -60,12 +72,15 @@ export abstract class OcrService {
     return { asset, images: [{ image, mimeType }] };
   }
 
-  private static toContent(
-    prompt: string,
-    document: Awaited<ReturnType<typeof this.loadDocument>>,
-  ) {
+  private static toContent(prompt: string, document: OcrDocument) {
     if ('text' in document) {
-      return [{ type: 'text' as const, text: `${prompt}\n\n${document.text}` }];
+      // Very long text keeps its beginning and end (headers and totals) within the model limit
+      const half = FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE / 2;
+      const text =
+        document.text.length > FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE
+          ? `${document.text.slice(0, half)}\n…\n${document.text.slice(-half)}`
+          : document.text;
+      return [{ type: 'text' as const, text: `${prompt}\n\n${text}` }];
     }
     return [
       { type: 'text' as const, text: prompt },
@@ -133,8 +148,28 @@ export abstract class OcrService {
       }
 
       const agent = mastra.getAgent('ocrAgent');
+      let content: OcrDocument = document;
+
+      // Long text is summarized part by part first, then the part summaries are summarized
+      if ('text' in document && document.text.length > FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE) {
+        const partSummaries: string[] = [];
+        for (const part of splitText(document.text, FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE)) {
+          const partResult = await agent.generate([
+            {
+              role: 'user',
+              content: this.toContent(FILE_LIBRARY_ASSET_OCR_PART_SUMMARY_PROMPT, {
+                asset,
+                text: part,
+              }),
+            },
+          ]);
+          partSummaries.push(partResult.text);
+        }
+        content = { asset, text: partSummaries.join('\n\n') };
+      }
+
       const result = await agent.generate([
-        { role: 'user', content: this.toContent(FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT, document) },
+        { role: 'user', content: this.toContent(FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT, content) },
       ]);
 
       const updatedAsset = await this.saveMetadata(uuid, { summary: result.text });

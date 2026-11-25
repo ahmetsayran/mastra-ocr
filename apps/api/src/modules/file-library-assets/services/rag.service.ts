@@ -4,36 +4,21 @@ import { randomUUID } from 'crypto';
 import { documentEmbedder } from '../../../mastra/embedders/document-embedder';
 import {
   FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE,
+  FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE,
   FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT,
 } from '../constants';
+import { splitText } from '../../../utils';
 import { FileLibraryAssetsService } from '../service';
 import { OcrService } from './ocr.service';
 
 export abstract class RagService {
-  // PDF text has no line breaks, so a paragraph longer than a chunk is split at word boundaries
-  private static split(paragraph: string) {
-    if (paragraph.length <= FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) return [paragraph];
-
-    const parts: string[] = [];
-    let part = '';
-
-    for (const word of paragraph.split(/\s+/)) {
-      if (part && part.length + word.length + 1 > FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) {
-        parts.push(part);
-        part = '';
-      }
-      part += part ? ` ${word}` : word;
-    }
-    if (part) parts.push(part);
-
-    return parts;
-  }
-
   private static chunk(text: string) {
     const chunks: string[] = [];
     let current = '';
 
-    for (const paragraph of text.split(/\n\s*\n/).flatMap((p) => this.split(p))) {
+    for (const paragraph of text
+      .split(/\n\s*\n/)
+      .flatMap((p) => splitText(p, FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE))) {
       if (current && current.length + paragraph.length > FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) {
         chunks.push(current.trim());
         current = '';
@@ -49,8 +34,14 @@ export abstract class RagService {
     return `[${values.join(',')}]`;
   }
 
+  // Long documents are embedded in batches so a single request stays within provider limits
   private static async embed(values: string[]) {
-    const { embeddings } = await documentEmbedder.doEmbed({ values });
+    const embeddings: number[][] = [];
+    for (let i = 0; i < values.length; i += FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE) {
+      const batch = values.slice(i, i + FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE);
+      const result = await documentEmbedder.doEmbed({ values: batch });
+      embeddings.push(...result.embeddings);
+    }
     return embeddings;
   }
 
