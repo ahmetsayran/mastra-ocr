@@ -37,6 +37,10 @@ export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
   maxSize: 10 * 1024 * 1024, // 10MB
 };
 
+// Scanned PDFs (no text layer) are read page by page as images; each page is one AI request
+export const FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES = 5;
+export const FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE = 2;
+
 export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
   invoiceNumber: z.string().nullable().describe('Fatura numarası'),
   invoiceDate: z

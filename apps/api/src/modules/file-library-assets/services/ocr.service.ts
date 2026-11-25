@@ -5,7 +5,11 @@ import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
 import { NotFoundException, UnprocessableEntityException } from '../../../utils';
 import { toAgentHttpError } from '../../../utils/agent-errors';
-import { FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA } from '../constants';
+import {
+  FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
+  FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
+  FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
+} from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
@@ -34,18 +38,27 @@ export abstract class OcrService {
     // PDFs are read with the boilerplate PDF service (text layer), images go to the vision model
     if (asset.mimeType === FileLibraryAssetMimeType.DOCUMENT_PDF) {
       const text = await pdfService.extractTextFromFile(filePath);
-      if (!text.trim()) {
+      if (text.trim()) {
+        return { asset, text };
+      }
+
+      // Scanned PDF has no text layer, so its pages go to the vision model as images
+      const pageCount = await pdfService.getPageCountFromFile(filePath);
+      if (pageCount > FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES) {
         throw new UnprocessableEntityException(
-          'PDF içinde okunabilir yazı bulunamadı; taranmış PDF desteklenmiyor',
+          `Taranmış PDF en fazla ${FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES} sayfa olabilir`,
         );
       }
-      return { asset, text };
+      const pages = await pdfService.renderPagesFromFile(filePath, {
+        scale: FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
+      });
+      return { asset, images: pages.map((image) => ({ image, mimeType: 'image/png' })) };
     }
 
     const image = await fs.promises.readFile(filePath);
     const mimeType = asset.mimeType.replace('_', '/').toLowerCase();
 
-    return { asset, image, mimeType };
+    return { asset, images: [{ image, mimeType }] };
   }
 
   private static toContent(
@@ -57,7 +70,11 @@ export abstract class OcrService {
     }
     return [
       { type: 'text' as const, text: prompt },
-      { type: 'image' as const, image: document.image, mimeType: document.mimeType },
+      ...document.images.map(({ image, mimeType }) => ({
+        type: 'image' as const,
+        image,
+        mimeType,
+      })),
     ];
   }
 
