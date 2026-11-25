@@ -64,10 +64,7 @@ export abstract class RagService {
       try {
         await this.index(uuid);
       } catch (error) {
-        // FileLibraryAssetsService errors arrive as rejected promises
-        const reason =
-          error instanceof Promise ? await error.catch((rejection: unknown) => rejection) : error;
-        console.error('Document indexing background task error:', reason);
+        console.error('Document indexing background task error:', error);
       }
     })();
   }

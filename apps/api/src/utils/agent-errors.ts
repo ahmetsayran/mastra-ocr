@@ -5,12 +5,7 @@ import {
   TooManyRequestsException,
 } from './http-errors';
 
-export async function toAgentHttpError(error: unknown, context: string, fallbackMessage: string) {
-  // Service errors arrive as rejected promises (async handlePrismaError)
-  if (error instanceof Promise) {
-    error = await error.catch((rejection: unknown) => rejection);
-  }
-
+export function toAgentHttpError(error: unknown, context: string, fallbackMessage: string) {
   if (error instanceof HttpError) {
     return error;
   }

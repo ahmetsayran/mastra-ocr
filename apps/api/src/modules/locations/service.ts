@@ -4,7 +4,7 @@ import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library
 import { NotFoundException, type PaginationQuery } from '#utils';
 
 export abstract class LocationsService {
-  private static async handlePrismaError(error: unknown, context: 'find') {
+  private static handlePrismaError(error: unknown, context: 'find'): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Record not found');

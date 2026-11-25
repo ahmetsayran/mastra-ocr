@@ -36,10 +36,10 @@ interface UserPayload {
 }
 
 export abstract class UsersService {
-  private static async handlePrismaError(
+  private static handlePrismaError(
     error: unknown,
     context: 'find' | 'create' | 'update' | 'delete',
-  ) {
+  ): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Kullanıcı bulunamadı');

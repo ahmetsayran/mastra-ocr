@@ -12,10 +12,10 @@ import { PERMISSIONS } from '../auth/authorization/permissions/constants';
 import type { ProjectCreatePayload, ProjectIndexQuery, ProjectUpdatePayload } from './types';
 
 export abstract class ProjectsService {
-  private static async handlePrismaError(
+  private static handlePrismaError(
     error: unknown,
     context: 'find' | 'create' | 'update' | 'delete',
-  ) {
+  ): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Proje bulunamadı');

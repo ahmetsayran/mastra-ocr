@@ -5,7 +5,7 @@ import fs from 'fs';
 import { nanoid } from 'nanoid';
 import path from 'path';
 import { getStoragePath } from '../../core';
-import { NotFoundException } from '../../utils';
+import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { PaginationService } from '../../utils/pagination';
 import { FILE_LIBRARY_ASSET_TYPE_RULES, normalizeMimeType } from './constants';
 import { getFileLibraryAssetFilters } from './dtos';
@@ -150,10 +150,10 @@ export abstract class FileLibraryAssetsService {
     return 'buffer' in input;
   }
 
-  private static async handlePrismaError(
+  private static handlePrismaError(
     error: unknown,
     context: 'find' | 'create' | 'update' | 'delete',
-  ) {
+  ): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Dosya bulunamadı');
@@ -265,12 +265,12 @@ export abstract class FileLibraryAssetsService {
 
       // Validate file size
       if (buffer.length > maxSize) {
-        throw new Error('Dosya boyutu maksimum dosya boyutundan büyük olamaz.');
+        throw new UnprocessableEntityException('Dosya boyutu maksimum dosya boyutundan büyük olamaz.');
       }
 
       // Validate MIME type
       if (!allowedMimeTypes.includes(mimeType)) {
-        throw new Error(`Desteklenmeyen dosya türü: ${mimeType}`);
+        throw new UnprocessableEntityException(`Desteklenmeyen dosya türü: ${mimeType}`);
       }
 
       // Store file to file system
@@ -340,6 +340,7 @@ export abstract class FileLibraryAssetsService {
 
       const updates: Prisma.FileLibraryAssetUpdateInput = {
         name: data.name,
+        title: data.title,
         metadata: data.metadata !== undefined ? data.metadata : undefined,
       };
 

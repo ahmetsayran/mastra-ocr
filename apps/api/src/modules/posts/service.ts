@@ -6,10 +6,10 @@ import type { PaginationQuery } from '../../utils/pagination';
 import type { PostCreatePayload, PostUpdatePayload } from './types';
 
 export abstract class PostsService {
-  private static async handlePrismaError(
+  private static handlePrismaError(
     error: unknown,
     context: 'find' | 'create' | 'update' | 'delete',
-  ) {
+  ): never {
     if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundException('Gönderi bulunamadı');
