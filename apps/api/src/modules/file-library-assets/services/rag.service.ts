@@ -2,12 +2,12 @@ import prisma from '@onlyjs/db';
 import { FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
 import { randomUUID } from 'crypto';
 import { documentEmbedder } from '../../../mastra/embedders/document-embedder';
+import { splitText } from '../../../utils';
 import {
   FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE,
   FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE,
   FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT,
 } from '../constants';
-import { splitText } from '../../../utils';
 import { FileLibraryAssetsService } from '../service';
 import { OcrService } from './ocr.service';
 

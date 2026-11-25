@@ -6,6 +6,7 @@ import {
   FileLibraryAssetType,
   type Prisma,
 } from '@onlyjs/db/client';
+import type { z } from 'zod';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
 import { NotFoundException, splitText, UnprocessableEntityException } from '../../../utils';
@@ -14,21 +15,20 @@ import {
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT,
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA,
   FILE_LIBRARY_ASSET_OCR_EXTRACTORS,
-  FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
   FILE_LIBRARY_ASSET_OCR_PART_SUMMARY_PROMPT,
+  FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
   FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
   FILE_LIBRARY_ASSET_OCR_READ_PROMPT,
   FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT,
   FILE_LIBRARY_ASSET_OCR_TEXT_PART_SIZE,
 } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
-import type { z } from 'zod';
+import { FileLibraryAssetsService } from '../service';
 import type {
   FileLibraryAssetExtractionUpdateInput,
   FileLibraryAssetOcrDocumentType,
   FileLibraryAssetOcrExtraction,
 } from '../types';
-import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
 import { ValidationService } from './validation.service';
 
