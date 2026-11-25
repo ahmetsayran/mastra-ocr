@@ -11,6 +11,9 @@ import { FileLibraryAssetsService } from '../service';
 
 const READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 
+const SUMMARY_PROMPT =
+  'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz.';
+
 const EXTRACT_PROMPT =
   'Bu faturadaki bilgileri ayıkla. Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
   'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
@@ -28,7 +31,7 @@ export abstract class OcrService {
     const image = await fs.promises.readFile(getStoragePath(asset.path));
     const mimeType = asset.mimeType.replace('_', '/').toLowerCase();
 
-    return { image, mimeType };
+    return { asset, image, mimeType };
   }
 
   private static async saveMetadata(uuid: string, data: Record<string, unknown>) {
@@ -71,6 +74,39 @@ export abstract class OcrService {
         error,
         'OcrService.read',
         'Yapay zekâ servisi belgeyi işleyemedi, tekrar deneyin',
+      );
+    }
+  }
+
+  static async summarize(uuid: string) {
+    try {
+      const { asset, image, mimeType } = await this.loadDocument(uuid);
+
+      // A saved summary is reused so the same document is not summarized twice
+      const metadata = asset.metadata as { summary?: string } | null;
+      if (metadata?.summary) {
+        return FileLibraryAssetFormatter.response(asset);
+      }
+
+      const agent = mastra.getAgent('ocrAgent');
+      const result = await agent.generate([
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: SUMMARY_PROMPT },
+            { type: 'image', image, mimeType },
+          ],
+        },
+      ]);
+
+      const updatedAsset = await this.saveMetadata(uuid, { summary: result.text });
+
+      return FileLibraryAssetFormatter.response(updatedAsset);
+    } catch (error) {
+      throw await toAgentHttpError(
+        error,
+        'OcrService.summarize',
+        'Yapay zekâ servisi belgeyi özetleyemedi, tekrar deneyin',
       );
     }
   }
