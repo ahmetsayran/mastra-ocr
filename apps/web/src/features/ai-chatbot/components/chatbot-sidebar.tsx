@@ -12,13 +12,13 @@ import {
   SidebarRail,
   useSidebar,
 } from '#/components/ui/sidebar';
-import { IconArrowLeft, IconMessage, IconPlus } from '@tabler/icons-react';
+import { IconMessage, IconPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { threadsListQueryOptions } from '../queries/thread-queries';
 
 /**
- * ChatbotSidebar - Replaces the navigation links with the user's chat threads on /ai/chatbot
+ * ChatbotSidebar - New chat button and the user's chat threads
  */
 export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile } = useSidebar();
@@ -29,14 +29,6 @@ export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar
     <Sidebar collapsible="icon" variant="floating" {...props}>
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Back to menu">
-              <Link to="/" onClick={() => setOpenMobile(false)}>
-                <IconArrowLeft />
-                <span>Back to menu</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={!threadId} tooltip="New chat">
               <Link to="/ai/chatbot" onClick={() => setOpenMobile(false)}>
