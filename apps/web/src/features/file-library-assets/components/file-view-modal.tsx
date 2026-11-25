@@ -17,9 +17,12 @@ import {
 import { env } from '#/config/env';
 import type {
   FileLibraryAssetOcrDocumentType,
+  FileLibraryAssetOcrValidationIssue,
   FileLibraryAssetShowResponse,
 } from '#backend/modules/file-library-assets/types';
 import {
+  CircleAlert,
+  CircleCheck,
   Download,
   ExternalLink,
   FileImage,
@@ -103,6 +106,33 @@ function formatExtractionValue(value: unknown): string {
   return String(value);
 }
 
+function formatValidationIssue(
+  issue: FileLibraryAssetOcrValidationIssue,
+  documentType: FileLibraryAssetOcrDocumentType,
+): string {
+  const label =
+    EXTRACTION_FIELDS[documentType].find((field) => field.key === issue.field)?.label ?? 'Date';
+
+  switch (issue.code) {
+    case 'TOTAL_MISMATCH':
+      return `Subtotal + VAT is ${issue.expected}, but the total is ${issue.actual}`;
+    case 'LINE_ITEMS_MISMATCH':
+      return `Line items add up to ${issue.actual}, expected ${issue.expected}`;
+    case 'LINE_TOTAL_MISMATCH':
+      return `Line ${issue.line}: quantity × unit price is ${issue.expected}, but the line total is ${issue.actual}`;
+    case 'INVALID_DATE':
+      return `${label} is not a valid date`;
+    case 'FUTURE_DATE':
+      return `${label} is in the future`;
+    case 'DATE_ORDER':
+      return 'End date is before the start date';
+    case 'INVALID_ID_NUMBER':
+      return 'ID number is not a valid Turkish ID number';
+    case 'EXPIRED':
+      return 'The document has expired';
+  }
+}
+
 function formatFileSize(sizeStr: string): string {
   const bytes = parseInt(sizeStr, 10);
   if (isNaN(bytes)) return sizeStr;
@@ -169,6 +199,7 @@ export function FileViewModal({
     unitPrice: number | null;
     total: number | null;
   }[] = asset.metadata?.extraction?.lineItems ?? [];
+  const validation: FileLibraryAssetOcrValidationIssue[] | undefined = asset.metadata?.validation;
   const summary: string | undefined = asset.metadata?.summary;
 
   const handleDownload = () => {
@@ -327,6 +358,22 @@ export function FileViewModal({
                       </Table>
                     </div>
                   )}
+                  {validation &&
+                    (validation.length === 0 ? (
+                      <p className="col-span-2 flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                        <CircleCheck className="w-4 h-4" />
+                        All checks passed
+                      </p>
+                    ) : (
+                      <ul className="col-span-2 space-y-1 text-amber-600 dark:text-amber-400">
+                        {validation.map((issue, index) => (
+                          <li key={`${issue.code}-${index}`} className="flex items-start gap-2">
+                            <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" />
+                            {formatValidationIssue(issue, documentType)}
+                          </li>
+                        ))}
+                      </ul>
+                    ))}
                 </div>
               ) : (
                 <p className="text-muted-foreground italic">Not extracted yet</p>

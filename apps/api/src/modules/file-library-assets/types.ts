@@ -24,6 +24,21 @@ export type FileLibraryAssetIndexQuery = Static<typeof fileLibraryAssetIndexDto.
 
 export type FileLibraryAssetOcrDocumentType =
   (typeof FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES)[number];
+export type FileLibraryAssetOcrValidationIssue = {
+  code:
+    | 'TOTAL_MISMATCH'
+    | 'LINE_ITEMS_MISMATCH'
+    | 'LINE_TOTAL_MISMATCH'
+    | 'INVALID_DATE'
+    | 'FUTURE_DATE'
+    | 'DATE_ORDER'
+    | 'INVALID_ID_NUMBER'
+    | 'EXPIRED';
+  field?: string;
+  line?: number;
+  expected?: number;
+  actual?: number;
+};
 export type FileLibraryAssetOcrExtraction = z.infer<
   (typeof FILE_LIBRARY_ASSET_OCR_EXTRACTORS)[FileLibraryAssetOcrDocumentType]['schema']
 >;

@@ -155,6 +155,9 @@ export const FILE_LIBRARY_ASSET_OCR_EXTRACTORS = {
   },
 } as const;
 
+// Amount difference allowed by validation checks (rounding on documents)
+export const FILE_LIBRARY_ASSET_OCR_AMOUNT_TOLERANCE = 0.05;
+
 export const FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE = 1000; // characters
 export const FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT = 3;
 

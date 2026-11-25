@@ -19,6 +19,7 @@ import type { z } from 'zod';
 import type { FileLibraryAssetOcrDocumentType, FileLibraryAssetOcrExtraction } from '../types';
 import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
+import { ValidationService } from './validation.service';
 
 export abstract class OcrService {
   private static async loadDocument(uuid: string) {
@@ -189,6 +190,7 @@ export abstract class OcrService {
       const updatedAsset = await this.saveMetadata(uuid, {
         documentType,
         extraction: result.object,
+        validation: ValidationService.validate(documentType, result.object),
       });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
