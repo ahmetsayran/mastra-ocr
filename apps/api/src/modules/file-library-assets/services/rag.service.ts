@@ -10,11 +10,30 @@ import { FileLibraryAssetsService } from '../service';
 import { OcrService } from './ocr.service';
 
 export abstract class RagService {
+  // PDF text has no line breaks, so a paragraph longer than a chunk is split at word boundaries
+  private static split(paragraph: string) {
+    if (paragraph.length <= FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) return [paragraph];
+
+    const parts: string[] = [];
+    let part = '';
+
+    for (const word of paragraph.split(/\s+/)) {
+      if (part && part.length + word.length + 1 > FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) {
+        parts.push(part);
+        part = '';
+      }
+      part += part ? ` ${word}` : word;
+    }
+    if (part) parts.push(part);
+
+    return parts;
+  }
+
   private static chunk(text: string) {
     const chunks: string[] = [];
     let current = '';
 
-    for (const paragraph of text.split(/\n\s*\n/)) {
+    for (const paragraph of text.split(/\n\s*\n/).flatMap((p) => this.split(p))) {
       if (current && current.length + paragraph.length > FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE) {
         chunks.push(current.trim());
         current = '';
