@@ -85,6 +85,8 @@ export default function FileLibraryAssetsIndexPage() {
     isExtracting,
     summarizeFileLibraryAsset,
     isSummarizing,
+    updateFileLibraryAssetExtraction,
+    isUpdatingExtraction,
   } = useFileLibraryAssets({
     name: debouncedSearch || undefined,
     page: pagination.pageIndex + 1,
@@ -139,6 +141,11 @@ export default function FileLibraryAssetsIndexPage() {
 
   const handleSummarize = async (uuid: string) => {
     const updatedAsset = await summarizeFileLibraryAsset(uuid);
+    setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
+  };
+
+  const handleUpdateExtraction = async (uuid: string, extraction: Record<string, unknown>) => {
+    const updatedAsset = await updateFileLibraryAssetExtraction({ uuid, extraction });
     setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
   };
 
@@ -278,6 +285,8 @@ export default function FileLibraryAssetsIndexPage() {
           isExtracting={isExtracting}
           onSummarize={handleSummarize}
           isSummarizing={isSummarizing}
+          onUpdateExtraction={handleUpdateExtraction}
+          isUpdatingExtraction={isUpdatingExtraction}
         />
       </div>
     </PageContainer>

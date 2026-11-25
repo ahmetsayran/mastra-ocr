@@ -90,6 +90,8 @@ export function AiBotSidebar({
     isExtracting,
     summarizeFileLibraryAsset,
     isSummarizing,
+    updateFileLibraryAssetExtraction,
+    isUpdatingExtraction,
   } = useFileLibraryAssets({
     type: FileLibraryAssetType.OCR_DOCUMENT,
     title: debouncedSearch || undefined,
@@ -290,6 +292,10 @@ export function AiBotSidebar({
           await summarizeFileLibraryAsset(uuid);
         }}
         isSummarizing={isSummarizing}
+        onUpdateExtraction={async (uuid, extraction) => {
+          await updateFileLibraryAssetExtraction({ uuid, extraction });
+        }}
+        isUpdatingExtraction={isUpdatingExtraction}
       />
       <ThreadRenameModal
         open={!!renamingThread}

@@ -187,6 +187,35 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     },
   });
 
+  // ====================================================================
+  // ✍️ OCR EXTRACTION UPDATE MUTATION
+  // ====================================================================
+  const ocrExtractionUpdateMutation = useMutation({
+    mutationFn: async ({ uuid, extraction }: { uuid: string; extraction: Record<string, unknown> }) => {
+      const response = await api['file-library-assets']({ uuid }).extraction.put({ extraction });
+
+      if (response.error) {
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : 'Failed to update extracted data';
+        throw new Error(errorMessage);
+      }
+
+      return response.data;
+    },
+    onSuccess: (_, { uuid }) => {
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+      toast.success('Extracted data saved');
+    },
+    onError: (error) => {
+      console.error('Failed to update extracted data:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update extracted data');
+    },
+  });
+
   return {
     // State
     fileLibraryAssets: fileLibraryAssetsResponse?.data,
@@ -218,5 +247,8 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
 
     summarizeFileLibraryAsset: ocrSummaryMutation.mutateAsync,
     isSummarizing: ocrSummaryMutation.isPending,
+
+    updateFileLibraryAssetExtraction: ocrExtractionUpdateMutation.mutateAsync,
+    isUpdatingExtraction: ocrExtractionUpdateMutation.isPending,
   };
 }

@@ -7,6 +7,7 @@ import {
 } from './constants';
 import {
   fileLibraryAssetCreateInputDto,
+  fileLibraryAssetExtractionUpdateDto,
   fileLibraryAssetIndexDto,
   fileLibraryAssetResponseDto,
   fileLibraryAssetShowDto,
@@ -19,6 +20,10 @@ export type FileLibraryAssetDestroyParams = FileLibraryAssetShowParams;
 
 export type FileLibraryAssetCreateInput = Static<typeof fileLibraryAssetCreateInputDto>;
 export type FileLibraryAssetUpdateInput = Static<typeof fileLibraryAssetUpdateInputDto>;
+
+export type FileLibraryAssetExtractionUpdateInput = Static<
+  (typeof fileLibraryAssetExtractionUpdateDto)['body']
+>;
 
 export type FileLibraryAssetIndexQuery = Static<typeof fileLibraryAssetIndexDto.query>;
 

@@ -116,6 +116,22 @@ export const fileLibraryAssetExtractDto = {
   },
 } satisfies ControllerHook;
 
+export const fileLibraryAssetExtractionUpdateDto = {
+  ...fileLibraryAssetShowDto,
+  body: t.Object({
+    extraction: t.Record(t.String(), t.Unknown()),
+  }),
+  response: {
+    200: fileLibraryAssetResponseDto,
+    404: errorResponseDto[404],
+    422: errorResponseDto[422],
+  },
+  detail: {
+    summary: 'Update Extraction',
+    description: 'Ayıklanan bilgileri elle düzeltir ve yeniden doğrular',
+  },
+} satisfies ControllerHook;
+
 export const fileLibraryAssetSummaryDto = {
   ...fileLibraryAssetOcrDto,
   detail: {

@@ -16,7 +16,11 @@ import {
 } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
 import type { z } from 'zod';
-import type { FileLibraryAssetOcrDocumentType, FileLibraryAssetOcrExtraction } from '../types';
+import type {
+  FileLibraryAssetExtractionUpdateInput,
+  FileLibraryAssetOcrDocumentType,
+  FileLibraryAssetOcrExtraction,
+} from '../types';
 import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
 import { ValidationService } from './validation.service';
@@ -143,6 +147,31 @@ export abstract class OcrService {
         'Yapay zekâ servisi belgeyi özetleyemedi, tekrar deneyin',
       );
     }
+  }
+
+  // Manual correction of extracted data: checked against the same schema, then validated again
+  static async updateExtraction(
+    uuid: string,
+    { extraction }: FileLibraryAssetExtractionUpdateInput,
+  ) {
+    const asset = await FileLibraryAssetsService.show(uuid);
+    const metadata = asset.metadata as { documentType?: FileLibraryAssetOcrDocumentType } | null;
+    if (!metadata?.documentType) {
+      throw new UnprocessableEntityException('Önce belgedeki bilgileri ayıklayın');
+    }
+
+    const parsed =
+      FILE_LIBRARY_ASSET_OCR_EXTRACTORS[metadata.documentType].schema.safeParse(extraction);
+    if (!parsed.success) {
+      throw new UnprocessableEntityException('Ayıklanan bilgiler geçersiz');
+    }
+
+    const updatedAsset = await this.saveMetadata(uuid, {
+      extraction: parsed.data,
+      validation: ValidationService.validate(metadata.documentType, parsed.data),
+    });
+
+    return FileLibraryAssetFormatter.response(updatedAsset);
   }
 
   static async extract(uuid: string) {

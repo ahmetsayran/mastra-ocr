@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { env } from '#/config/env';
+import { useEffect, useState } from 'react';
 import type {
   FileLibraryAssetOcrDocumentType,
   FileLibraryAssetOcrValidationIssue,
@@ -29,9 +30,11 @@ import {
   FileText,
   FileVideo,
   NotebookText,
+  Pencil,
   Receipt,
   ScanText,
 } from 'lucide-react';
+import { type ExtractionField, ExtractionForm } from './extraction-form';
 
 interface FileViewModalProps {
   open: boolean;
@@ -43,6 +46,8 @@ interface FileViewModalProps {
   isExtracting: boolean;
   onSummarize: (uuid: string) => Promise<void>;
   isSummarizing: boolean;
+  onUpdateExtraction: (uuid: string, extraction: Record<string, unknown>) => Promise<void>;
+  isUpdatingExtraction: boolean;
 }
 
 const DOCUMENT_TYPE_LABELS: Record<FileLibraryAssetOcrDocumentType, string> = {
@@ -54,47 +59,47 @@ const DOCUMENT_TYPE_LABELS: Record<FileLibraryAssetOcrDocumentType, string> = {
 };
 
 // Fields shown for each document type, in the order of the API extraction schemas
-const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, { key: string; label: string }[]> = {
+const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, ExtractionField[]> = {
   invoice: [
-    { key: 'invoiceNumber', label: 'Invoice No' },
-    { key: 'invoiceDate', label: 'Date' },
-    { key: 'sellerName', label: 'Seller' },
-    { key: 'buyerName', label: 'Buyer' },
-    { key: 'subtotal', label: 'Subtotal' },
-    { key: 'taxAmount', label: 'VAT' },
-    { key: 'totalAmount', label: 'Total' },
-    { key: 'currency', label: 'Currency' },
+    { key: 'invoiceNumber', label: 'Invoice No', kind: 'text' },
+    { key: 'invoiceDate', label: 'Date', kind: 'date' },
+    { key: 'sellerName', label: 'Seller', kind: 'text' },
+    { key: 'buyerName', label: 'Buyer', kind: 'text' },
+    { key: 'subtotal', label: 'Subtotal', kind: 'number' },
+    { key: 'taxAmount', label: 'VAT', kind: 'number' },
+    { key: 'totalAmount', label: 'Total', kind: 'number' },
+    { key: 'currency', label: 'Currency', kind: 'text' },
   ],
   receipt: [
-    { key: 'storeName', label: 'Store' },
-    { key: 'receiptDate', label: 'Date' },
-    { key: 'taxAmount', label: 'VAT' },
-    { key: 'totalAmount', label: 'Total' },
-    { key: 'paymentMethod', label: 'Payment' },
-    { key: 'currency', label: 'Currency' },
+    { key: 'storeName', label: 'Store', kind: 'text' },
+    { key: 'receiptDate', label: 'Date', kind: 'date' },
+    { key: 'taxAmount', label: 'VAT', kind: 'number' },
+    { key: 'totalAmount', label: 'Total', kind: 'number' },
+    { key: 'paymentMethod', label: 'Payment', kind: 'text' },
+    { key: 'currency', label: 'Currency', kind: 'text' },
   ],
   contract: [
-    { key: 'contractTitle', label: 'Contract' },
-    { key: 'parties', label: 'Parties' },
-    { key: 'startDate', label: 'Start Date' },
-    { key: 'endDate', label: 'End Date' },
-    { key: 'amount', label: 'Amount' },
-    { key: 'currency', label: 'Currency' },
-    { key: 'paymentTerms', label: 'Payment Terms' },
+    { key: 'contractTitle', label: 'Contract', kind: 'text' },
+    { key: 'parties', label: 'Parties', kind: 'list' },
+    { key: 'startDate', label: 'Start Date', kind: 'date' },
+    { key: 'endDate', label: 'End Date', kind: 'date' },
+    { key: 'amount', label: 'Amount', kind: 'number' },
+    { key: 'currency', label: 'Currency', kind: 'text' },
+    { key: 'paymentTerms', label: 'Payment Terms', kind: 'text' },
   ],
   id_card: [
-    { key: 'fullName', label: 'Full Name' },
-    { key: 'idNumber', label: 'ID Number' },
-    { key: 'birthDate', label: 'Birth Date' },
-    { key: 'nationality', label: 'Nationality' },
-    { key: 'documentNumber', label: 'Document No' },
-    { key: 'expiryDate', label: 'Expiry Date' },
+    { key: 'fullName', label: 'Full Name', kind: 'text' },
+    { key: 'idNumber', label: 'ID Number', kind: 'text' },
+    { key: 'birthDate', label: 'Birth Date', kind: 'date' },
+    { key: 'nationality', label: 'Nationality', kind: 'text' },
+    { key: 'documentNumber', label: 'Document No', kind: 'text' },
+    { key: 'expiryDate', label: 'Expiry Date', kind: 'date' },
   ],
   other: [
-    { key: 'title', label: 'Title' },
-    { key: 'documentDate', label: 'Date' },
-    { key: 'issuer', label: 'Issuer' },
-    { key: 'keyPoints', label: 'Key Points' },
+    { key: 'title', label: 'Title', kind: 'text' },
+    { key: 'documentDate', label: 'Date', kind: 'date' },
+    { key: 'issuer', label: 'Issuer', kind: 'text' },
+    { key: 'keyPoints', label: 'Key Points', kind: 'list' },
   ],
 };
 
@@ -182,7 +187,16 @@ export function FileViewModal({
   isExtracting,
   onSummarize,
   isSummarizing,
+  onUpdateExtraction,
+  isUpdatingExtraction,
 }: FileViewModalProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Editing closes when another document is opened
+  useEffect(() => {
+    setIsEditing(false);
+  }, [asset?.uuid]);
+
   if (!asset) return null;
 
   const fileUrl = `${env.apiUrl}/storage/${asset.path}`;
@@ -316,8 +330,26 @@ export function FileViewModal({
               <p className="text-muted-foreground mb-1 flex items-center gap-2">
                 Extracted Data
                 {documentType && <Badge variant="outline">{DOCUMENT_TYPE_LABELS[documentType]}</Badge>}
+                {documentType && extraction && !isEditing && (
+                  <Button variant="ghost" size="sm" className="ml-auto h-7" onClick={() => setIsEditing(true)}>
+                    <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                )}
               </p>
-              {documentType && extraction ? (
+              {documentType && extraction && isEditing ? (
+                <ExtractionForm
+                  fields={EXTRACTION_FIELDS[documentType]}
+                  extraction={extraction}
+                  hasLineItems={documentType === 'invoice' || documentType === 'receipt'}
+                  onSubmit={async (updatedExtraction) => {
+                    await onUpdateExtraction(asset.uuid, updatedExtraction);
+                    setIsEditing(false);
+                  }}
+                  onCancel={() => setIsEditing(false)}
+                  isSaving={isUpdatingExtraction}
+                />
+              ) : documentType && extraction ? (
                 <div className="grid grid-cols-2 gap-4 bg-muted rounded-lg p-3">
                   {EXTRACTION_FIELDS[documentType].map((field) => (
                     <div key={field.key}>
