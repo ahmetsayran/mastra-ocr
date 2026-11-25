@@ -23,7 +23,7 @@ export const listDocumentsTool = createTool({
       .filter((asset: FileLibraryAsset) => asset.type === FileLibraryAssetType.OCR_DOCUMENT)
       .map((asset: FileLibraryAsset) => ({
         uuid: asset.uuid,
-        name: asset.name,
+        name: asset.title ?? asset.name,
         createdAt: asset.createdAt,
       }));
   },
@@ -40,6 +40,7 @@ export const summarizeDocumentTool = createTool({
 
     const asset = (await OcrService.summarize(uuid)) as {
       name: string;
+      title: string | null;
       metadata: { summary?: string } | null;
     };
     await AuditLogService.create({
@@ -49,7 +50,7 @@ export const summarizeDocumentTool = createTool({
       entityUuid: uuid,
       description: 'OCR ile belge özeti çıkarıldı',
     });
-    return { name: asset.name, summary: asset.metadata?.summary };
+    return { name: asset.title ?? asset.name, summary: asset.metadata?.summary };
   },
 });
 
