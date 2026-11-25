@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { definePDFJSModule, extractText } from 'unpdf';
+import { definePDFJSModule, extractText, getDocumentProxy, renderPageAsImage } from 'unpdf';
 
 // Node.js ortamı için DOM polyfills
 declare global {
@@ -136,6 +136,60 @@ export class PDFService {
       console.error('❌ PDF text extraction from file failed:', error);
       throw new Error(
         `Failed to extract text from PDF file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * File path'den PDF'in sayfa sayısını döndürür
+   * @param filePath - PDF dosyasının path'i
+   * @returns Sayfa sayısı
+   */
+  public async getPageCountFromFile(filePath: string): Promise<number> {
+    try {
+      await this.initializePDF();
+
+      const pdf = await getDocumentProxy(new Uint8Array(fs.readFileSync(filePath)));
+      return pdf.numPages;
+    } catch (error) {
+      console.error('❌ PDF page count failed:', error);
+      throw new Error(
+        `Failed to read PDF page count: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * File path'den PDF sayfalarını PNG görsele çevirir (yazısı olmayan, taranmış PDF'ler için)
+   * @param filePath - PDF dosyasının path'i
+   * @param options - Render seçenekleri
+   * @returns Her sayfa için PNG Buffer'ı
+   */
+  public async renderPagesFromFile(
+    filePath: string,
+    options: {
+      scale?: number;
+    } = {},
+  ): Promise<Buffer[]> {
+    try {
+      await this.initializePDF();
+
+      const pdf = await getDocumentProxy(new Uint8Array(fs.readFileSync(filePath)));
+      const pages: Buffer[] = [];
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const image = await renderPageAsImage(pdf, pageNumber, {
+          canvasImport: () => import('@napi-rs/canvas'),
+          scale: options.scale,
+        });
+        pages.push(Buffer.from(image));
+      }
+
+      return pages;
+    } catch (error) {
+      console.error('❌ PDF page rendering failed:', error);
+      throw new Error(
+        `Failed to render PDF pages: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
