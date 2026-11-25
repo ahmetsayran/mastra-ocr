@@ -42,6 +42,8 @@ const en = {
   'aiBot.createFailed': 'Failed to create chat',
   'aiBot.attachFailed': 'Failed to add document to chat',
   'aiBot.attached': 'Document added: {title}. You can ask about it shortly.',
+  'aiBot.loadingChats': 'Loading chats...',
+  'aiBot.loadingChat': 'Loading chat...',
 
   // AI Bot sidebar
   'aiBot.searchRecords': 'Search records...',
@@ -197,6 +199,8 @@ const tr: Record<TranslationKey, string> = {
   'aiBot.createFailed': 'Sohbet oluşturulamadı',
   'aiBot.attachFailed': 'Belge sohbete eklenemedi',
   'aiBot.attached': 'Belge eklendi: {title}. Birazdan hakkında soru sorabilirsiniz.',
+  'aiBot.loadingChats': 'Sohbetler yükleniyor...',
+  'aiBot.loadingChat': 'Sohbet yükleniyor...',
 
   // AI Bot sidebar
   'aiBot.searchRecords': 'Kayıtlarda ara...',
