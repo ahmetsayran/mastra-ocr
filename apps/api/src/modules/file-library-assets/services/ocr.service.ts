@@ -6,14 +6,17 @@ import { mastra } from '../../../mastra';
 import { NotFoundException, UnprocessableEntityException } from '../../../utils';
 import { toAgentHttpError } from '../../../utils/agent-errors';
 import {
-  FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT,
-  FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
+  FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT,
+  FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA,
+  FILE_LIBRARY_ASSET_OCR_EXTRACTORS,
   FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES,
   FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE,
   FILE_LIBRARY_ASSET_OCR_READ_PROMPT,
   FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT,
 } from '../constants';
 import { FileLibraryAssetFormatter } from '../formatters';
+import type { z } from 'zod';
+import type { FileLibraryAssetOcrDocumentType, FileLibraryAssetOcrExtraction } from '../types';
 import { FileLibraryAssetsService } from '../service';
 import { pdfService } from './pdf.service';
 
@@ -144,25 +147,49 @@ export abstract class OcrService {
   static async extract(uuid: string) {
     try {
       const document = await this.loadDocument(uuid);
-
       const agent = mastra.getAgent('ocrAgent');
+
+      // The document type is found once and reused on later extractions
+      const metadata = document.asset.metadata as {
+        documentType?: FileLibraryAssetOcrDocumentType;
+      } | null;
+      const documentType =
+        metadata?.documentType ??
+        (
+          await agent.generate(
+            [
+              {
+                role: 'user',
+                content: this.toContent(FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT, document),
+              },
+            ],
+            {
+              structuredOutput: {
+                schema: FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA,
+                jsonPromptInjection: 'auto',
+              },
+              modelSettings: { temperature: 0 },
+            },
+          )
+        ).object.documentType;
+
+      const extractor: { prompt: string; schema: z.ZodType<FileLibraryAssetOcrExtraction> } =
+        FILE_LIBRARY_ASSET_OCR_EXTRACTORS[documentType];
       const result = await agent.generate(
-        [
-          {
-            role: 'user',
-            content: this.toContent(FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT, document),
-          },
-        ],
+        [{ role: 'user', content: this.toContent(extractor.prompt, document) }],
         {
           structuredOutput: {
-            schema: FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA,
+            schema: extractor.schema,
             jsonPromptInjection: 'auto',
           },
           modelSettings: { temperature: 0 },
         },
       );
 
-      const updatedAsset = await this.saveMetadata(uuid, { invoice: result.object });
+      const updatedAsset = await this.saveMetadata(uuid, {
+        documentType,
+        extraction: result.object,
+      });
 
       return FileLibraryAssetFormatter.response(updatedAsset);
     } catch (error) {

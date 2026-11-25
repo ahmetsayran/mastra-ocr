@@ -1,7 +1,10 @@
 import type { Static } from 'elysia';
 import type { z } from 'zod';
 
-import { FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA } from './constants';
+import {
+  FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES,
+  FILE_LIBRARY_ASSET_OCR_EXTRACTORS,
+} from './constants';
 import {
   fileLibraryAssetCreateInputDto,
   fileLibraryAssetIndexDto,
@@ -19,4 +22,8 @@ export type FileLibraryAssetUpdateInput = Static<typeof fileLibraryAssetUpdateIn
 
 export type FileLibraryAssetIndexQuery = Static<typeof fileLibraryAssetIndexDto.query>;
 
-export type FileLibraryAssetOcrInvoice = z.infer<typeof FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA>;
+export type FileLibraryAssetOcrDocumentType =
+  (typeof FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES)[number];
+export type FileLibraryAssetOcrExtraction = z.infer<
+  (typeof FILE_LIBRARY_ASSET_OCR_EXTRACTORS)[FileLibraryAssetOcrDocumentType]['schema']
+>;

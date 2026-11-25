@@ -46,27 +46,100 @@ export const FILE_LIBRARY_ASSET_OCR_READ_PROMPT = 'Bu görseldeki tüm metni oku
 export const FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT =
   'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz.';
 
-export const FILE_LIBRARY_ASSET_OCR_EXTRACT_PROMPT =
-  'Bu faturadaki bilgileri ayıkla. Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
-  'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
-  'Ara toplam KDV hariç tutardır; belgede "Ara Toplam" yazmıyorsa ürün ve hizmet satırlarındaki tutarların toplamını yaz. ' +
-  'Tarihi YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
+export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES = [
+  'invoice',
+  'receipt',
+  'contract',
+  'id_card',
+  'other',
+] as const;
+
+export const FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT =
+  'Bu belgenin türünü belirle: invoice (fatura), receipt (fiş veya makbuz), ' +
+  'contract (sözleşme), id_card (kimlik kartı, ehliyet veya pasaport), other (diğer).';
+
+export const FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA = z.object({
+  documentType: z.enum(FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES).describe('Belge türü'),
+});
+
+// Shared rules appended to every extraction prompt
+const FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES =
+  'Tutarları noktasız ve virgülsüz düz sayı olarak yaz (örnek: "1.440,00 TL" → 1440). ' +
+  'Tarihleri YYYY-MM-DD biçiminde yaz. Para birimini kod olarak yaz (TL → TRY). ' +
   'Belgede gerçekten olmayan bilgi için null yaz.';
 
-export const FILE_LIBRARY_ASSET_OCR_INVOICE_SCHEMA = z.object({
-  invoiceNumber: z.string().nullable().describe('Fatura numarası'),
-  invoiceDate: z
+const isoDate = (description: string) =>
+  z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .nullable()
-    .describe('Fatura tarihi, YYYY-MM-DD'),
-  sellerName: z.string().nullable().describe('Satıcı firma veya kişi adı'),
-  buyerName: z.string().nullable().describe('Alıcı firma veya kişi adı'),
-  subtotal: z.number().nonnegative().nullable().describe('KDV hariç ara toplam'),
-  taxAmount: z.number().nonnegative().nullable().describe('KDV tutarı'),
-  totalAmount: z.number().nonnegative().nullable().describe('Genel toplam, ödenecek tutar'),
-  currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
-});
+    .describe(`${description}, YYYY-MM-DD`);
+
+// Extraction prompt and schema for each document type
+export const FILE_LIBRARY_ASSET_OCR_EXTRACTORS = {
+  invoice: {
+    prompt:
+      'Bu faturadaki bilgileri ayıkla. ' +
+      'Belgede "Toplam", "Genel Toplam" veya "Ödenecek Tutar" yazan tutar genel toplamdır. ' +
+      'Ara toplam KDV hariç tutardır; belgede "Ara Toplam" yazmıyorsa ürün ve hizmet satırlarındaki tutarların toplamını yaz. ' +
+      FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES,
+    schema: z.object({
+      invoiceNumber: z.string().nullable().describe('Fatura numarası'),
+      invoiceDate: isoDate('Fatura tarihi'),
+      sellerName: z.string().nullable().describe('Satıcı firma veya kişi adı'),
+      buyerName: z.string().nullable().describe('Alıcı firma veya kişi adı'),
+      subtotal: z.number().nonnegative().nullable().describe('KDV hariç ara toplam'),
+      taxAmount: z.number().nonnegative().nullable().describe('KDV tutarı'),
+      totalAmount: z.number().nonnegative().nullable().describe('Genel toplam, ödenecek tutar'),
+      currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
+    }),
+  },
+  receipt: {
+    prompt: 'Bu fişteki veya makbuzdaki bilgileri ayıkla. ' + FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES,
+    schema: z.object({
+      storeName: z.string().nullable().describe('Mağaza veya işletme adı'),
+      receiptDate: isoDate('Fiş tarihi'),
+      taxAmount: z.number().nonnegative().nullable().describe('KDV tutarı'),
+      totalAmount: z.number().nonnegative().nullable().describe('Toplam tutar'),
+      paymentMethod: z.string().nullable().describe('Ödeme şekli, örnek nakit veya kredi kartı'),
+      currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
+    }),
+  },
+  contract: {
+    prompt: 'Bu sözleşmedeki bilgileri ayıkla. ' + FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES,
+    schema: z.object({
+      contractTitle: z.string().nullable().describe('Sözleşmenin adı veya türü'),
+      parties: z
+        .array(z.string())
+        .describe('Sözleşmenin tarafları, rolü ve adıyla (örnek: "Kiracı: Ali Yılmaz")'),
+      startDate: isoDate('Başlangıç tarihi'),
+      endDate: isoDate('Bitiş tarihi'),
+      amount: z.number().nonnegative().nullable().describe('Sözleşme bedeli veya dönemlik ödeme'),
+      currency: z.string().length(3).nullable().describe('Para birimi kodu, örnek TRY'),
+      paymentTerms: z.string().nullable().describe('Ödeme koşulları'),
+    }),
+  },
+  id_card: {
+    prompt: 'Bu kimlik belgesindeki bilgileri ayıkla. ' + FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES,
+    schema: z.object({
+      fullName: z.string().nullable().describe('Ad soyad'),
+      idNumber: z.string().nullable().describe('Kimlik numarası'),
+      birthDate: isoDate('Doğum tarihi'),
+      nationality: z.string().nullable().describe('Uyruk'),
+      documentNumber: z.string().nullable().describe('Belge veya seri numarası'),
+      expiryDate: isoDate('Son geçerlilik tarihi'),
+    }),
+  },
+  other: {
+    prompt: 'Bu belgedeki temel bilgileri ayıkla. ' + FILE_LIBRARY_ASSET_OCR_EXTRACT_RULES,
+    schema: z.object({
+      title: z.string().nullable().describe('Belgenin başlığı'),
+      documentDate: isoDate('Belgenin tarihi'),
+      issuer: z.string().nullable().describe('Belgeyi düzenleyen kişi veya kurum'),
+      keyPoints: z.array(z.string()).max(5).describe('Belgedeki en önemli bilgiler'),
+    }),
+  },
+} as const;
 
 export const FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE = 1000; // characters
 export const FILE_LIBRARY_ASSET_RAG_SEARCH_LIMIT = 3;

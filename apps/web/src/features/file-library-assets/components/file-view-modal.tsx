@@ -8,7 +8,7 @@ import {
 } from '#/components/ui/dialog';
 import { env } from '#/config/env';
 import type {
-  FileLibraryAssetOcrInvoice,
+  FileLibraryAssetOcrDocumentType,
   FileLibraryAssetShowResponse,
 } from '#backend/modules/file-library-assets/types';
 import {
@@ -34,21 +34,64 @@ interface FileViewModalProps {
   isSummarizing: boolean;
 }
 
-const INVOICE_FIELDS: { key: keyof FileLibraryAssetOcrInvoice; label: string }[] = [
-  { key: 'invoiceNumber', label: 'Invoice No' },
-  { key: 'invoiceDate', label: 'Date' },
-  { key: 'sellerName', label: 'Seller' },
-  { key: 'buyerName', label: 'Buyer' },
-  { key: 'subtotal', label: 'Subtotal' },
-  { key: 'taxAmount', label: 'VAT' },
-  { key: 'totalAmount', label: 'Total' },
-  { key: 'currency', label: 'Currency' },
-];
+const DOCUMENT_TYPE_LABELS: Record<FileLibraryAssetOcrDocumentType, string> = {
+  invoice: 'Invoice',
+  receipt: 'Receipt',
+  contract: 'Contract',
+  id_card: 'ID Card',
+  other: 'Other',
+};
+
+// Fields shown for each document type, in the order of the API extraction schemas
+const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, { key: string; label: string }[]> = {
+  invoice: [
+    { key: 'invoiceNumber', label: 'Invoice No' },
+    { key: 'invoiceDate', label: 'Date' },
+    { key: 'sellerName', label: 'Seller' },
+    { key: 'buyerName', label: 'Buyer' },
+    { key: 'subtotal', label: 'Subtotal' },
+    { key: 'taxAmount', label: 'VAT' },
+    { key: 'totalAmount', label: 'Total' },
+    { key: 'currency', label: 'Currency' },
+  ],
+  receipt: [
+    { key: 'storeName', label: 'Store' },
+    { key: 'receiptDate', label: 'Date' },
+    { key: 'taxAmount', label: 'VAT' },
+    { key: 'totalAmount', label: 'Total' },
+    { key: 'paymentMethod', label: 'Payment' },
+    { key: 'currency', label: 'Currency' },
+  ],
+  contract: [
+    { key: 'contractTitle', label: 'Contract' },
+    { key: 'parties', label: 'Parties' },
+    { key: 'startDate', label: 'Start Date' },
+    { key: 'endDate', label: 'End Date' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'currency', label: 'Currency' },
+    { key: 'paymentTerms', label: 'Payment Terms' },
+  ],
+  id_card: [
+    { key: 'fullName', label: 'Full Name' },
+    { key: 'idNumber', label: 'ID Number' },
+    { key: 'birthDate', label: 'Birth Date' },
+    { key: 'nationality', label: 'Nationality' },
+    { key: 'documentNumber', label: 'Document No' },
+    { key: 'expiryDate', label: 'Expiry Date' },
+  ],
+  other: [
+    { key: 'title', label: 'Title' },
+    { key: 'documentDate', label: 'Date' },
+    { key: 'issuer', label: 'Issuer' },
+    { key: 'keyPoints', label: 'Key Points' },
+  ],
+};
 
 // The API client turns date-like strings (e.g. "2026-11-15") into Date objects
-function formatInvoiceValue(value: string | number | Date | null | undefined): string {
+function formatExtractionValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
   return String(value);
 }
 
@@ -110,7 +153,8 @@ export function FileViewModal({
   const isPdf = asset.mimeType === 'DOCUMENT_PDF';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
-  const invoice: FileLibraryAssetOcrInvoice | undefined = asset.metadata?.invoice;
+  const documentType: FileLibraryAssetOcrDocumentType | undefined = asset.metadata?.documentType;
+  const extraction: Record<string, unknown> | undefined = asset.metadata?.extraction;
   const summary: string | undefined = asset.metadata?.summary;
 
   const handleDownload = () => {
@@ -221,17 +265,20 @@ export function FileViewModal({
             </div>
           )}
 
-          {/* OCR Invoice Data */}
+          {/* OCR Extracted Data */}
           {isOcrDocument && (
             <div className="text-sm">
-              <p className="text-muted-foreground mb-1">Invoice Data</p>
-              {invoice ? (
+              <p className="text-muted-foreground mb-1 flex items-center gap-2">
+                Extracted Data
+                {documentType && <Badge variant="outline">{DOCUMENT_TYPE_LABELS[documentType]}</Badge>}
+              </p>
+              {documentType && extraction ? (
                 <div className="grid grid-cols-2 gap-4 bg-muted rounded-lg p-3">
-                  {INVOICE_FIELDS.map((field) => (
+                  {EXTRACTION_FIELDS[documentType].map((field) => (
                     <div key={field.key}>
                       <p className="text-muted-foreground">{field.label}</p>
                       <p className="font-medium break-words">
-                        {formatInvoiceValue(invoice[field.key])}
+                        {formatExtractionValue(extraction[field.key])}
                       </p>
                     </div>
                   ))}
