@@ -3,15 +3,12 @@ import { Main } from '#/components/layout/main';
 import { ProfileDropdown } from '#/components/profile-dropdown';
 import { ThemeSwitch } from '#/components/theme-switch';
 import { Button } from '#/components/ui/button';
-import { useFileLibraryAssets } from '#/features/file-library-assets';
 import { cn } from '#/lib/utils';
-import { FileLibraryAssetType } from '@onlyjs/db/enums';
 import { IconMessages, IconPaperclip, IconSend } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { useChatbot } from '../hooks/use-chatbot';
 import { threadDetailQueryOptions } from '../queries/thread-queries';
 
@@ -24,8 +21,8 @@ export function ChatbotPage() {
   const { threadId } = useParams({ strict: false });
   const [message, setMessage] = useState('');
   const { data: thread } = useQuery({ ...threadDetailQueryOptions(threadId ?? '') });
-  const { sendMessage, isSending, pendingMessage, streamedReply } = useChatbot(threadId);
-  const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
+  const { sendMessage, isSending, pendingMessage, streamedReply, addDocument, isAddingDocument } =
+    useChatbot(threadId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const bubbles: ChatBubble[] = (threadId ? (thread?.messages ?? []) : []).map((msg) => ({
@@ -47,16 +44,10 @@ export function ChatbotPage() {
     setMessage('');
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
-    try {
-      await createFileLibraryAsset({ file, type: FileLibraryAssetType.OCR_DOCUMENT });
-      toast.success(`Document added: ${file.name}. You can ask about it shortly.`);
-    } catch {
-      // The error toast comes from the global mutation onError handler
-    }
+    if (file) addDocument(file);
   };
 
   return (
@@ -130,7 +121,7 @@ export function ChatbotPage() {
                   size="icon"
                   title="Add document"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isCreating}
+                  disabled={isAddingDocument}
                 >
                   <IconPaperclip size={20} />
                 </Button>

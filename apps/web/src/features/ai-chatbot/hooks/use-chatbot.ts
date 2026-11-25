@@ -1,5 +1,7 @@
 import { env } from '#/config/env';
+import { useFileLibraryAssets } from '#/features/file-library-assets';
 import { api } from '#/lib/api';
+import { FileLibraryAssetType } from '@onlyjs/db/enums';
 import { useNavigate } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -43,6 +45,7 @@ export function useChatbot(threadId?: string) {
   const navigate = useNavigate();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [streamedReply, setStreamedReply] = useState('');
+  const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
 
   const sendMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -80,10 +83,24 @@ export function useChatbot(threadId?: string) {
     },
   });
 
+  // ====================================================================
+  // 📎 ADD DOCUMENT (saved to the file library as an OCR document)
+  // ====================================================================
+  const addDocument = async (file: File) => {
+    try {
+      await createFileLibraryAsset({ file, type: FileLibraryAssetType.OCR_DOCUMENT });
+      toast.success(`Document added: ${file.name}. You can ask about it shortly.`);
+    } catch {
+      // The error toast comes from the global mutation onError handler
+    }
+  };
+
   return {
     sendMessage: sendMutation.mutate,
     isSending: sendMutation.isPending,
     pendingMessage,
     streamedReply,
+    addDocument,
+    isAddingDocument: isCreating,
   };
 }
