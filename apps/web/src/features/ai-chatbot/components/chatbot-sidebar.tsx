@@ -15,6 +15,7 @@ import {
 import { IconMessage, IconPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
+import { useSidebarResize } from '../hooks/use-sidebar-resize';
 import { threadsListQueryOptions } from '../queries/thread-queries';
 
 /**
@@ -24,6 +25,7 @@ export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar
   const { setOpenMobile } = useSidebar();
   const { threadId } = useParams({ strict: false });
   const { data: threads } = useQuery(threadsListQueryOptions());
+  const { railRef, onPointerDown, onClick } = useSidebarResize();
 
   return (
     <Sidebar collapsible="icon" variant="floating" {...props}>
@@ -67,7 +69,12 @@ export function ChatbotSidebar({ ...props }: React.ComponentProps<typeof Sidebar
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail
+        ref={railRef}
+        onPointerDown={onPointerDown}
+        onClick={onClick}
+        title="Drag to resize, click to toggle"
+      />
     </Sidebar>
   );
 }
