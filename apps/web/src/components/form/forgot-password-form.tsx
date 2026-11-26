@@ -14,23 +14,28 @@ import {
     FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { useLanguage } from "#/context/language-context";
 import { cn } from "#/lib/utils";
 import { authClient } from "#lib/auth";
 import { typeboxResolver } from "#lib/resolver.ts";
 
 type ForgotFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = t.Object({
-    email: t.String({
-        format: "email",
-    }),
-});
+// Error messages follow the selected language
+const createFormSchema = (translate: ReturnType<typeof useLanguage>["t"]) =>
+    t.Object({
+        email: t.String({
+            format: "email",
+            error: translate("auth.invalidEmail"),
+        }),
+    });
 
-type FormSchema = Static<typeof formSchema>;
+type FormSchema = Static<ReturnType<typeof createFormSchema>>;
 
 export function ForgotPasswordForm({ className, ...props }: ForgotFormProps) {
+    const { t: translate } = useLanguage();
     const form = useForm<FormSchema>({
-        resolver: typeboxResolver(formSchema),
+        resolver: typeboxResolver(createFormSchema(translate)),
         defaultValues: { email: "" },
     });
 
@@ -40,7 +45,7 @@ export function ForgotPasswordForm({ className, ...props }: ForgotFormProps) {
             toast.error(response.error.message);
         }
         if (response.data) {
-            toast.success("Password reset email sent");
+            toast.success(translate("auth.resetEmailSent"));
             throw redirect({ to: "/sign-in" });
         }
     }
@@ -57,7 +62,7 @@ export function ForgotPasswordForm({ className, ...props }: ForgotFormProps) {
                     name="email"
                     render={({ field }) => (
                         <FormItem className="space-y-1">
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>{translate("auth.email")}</FormLabel>
                             <FormControl>
                                 <Input
                                     placeholder="name@example.com"
@@ -69,7 +74,7 @@ export function ForgotPasswordForm({ className, ...props }: ForgotFormProps) {
                     )}
                 />
                 <Button className="mt-2" disabled={form.formState.isSubmitting}>
-                    Continue
+                    {translate("auth.continue")}
                 </Button>
             </form>
         </Form>

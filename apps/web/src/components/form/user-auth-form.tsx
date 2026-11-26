@@ -15,26 +15,32 @@ import {
     FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { useLanguage } from "#/context/language-context";
 import { cn } from "#/lib/utils";
 import { authClient } from "#lib/auth";
 import { typeboxResolver } from "#lib/resolver.ts";
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = t.Object({
-    email: t.String({
-        format: "email",
-    }),
-    password: t.String({
-        minLength: 8,
-    }),
-});
+// Error messages follow the selected language
+const createFormSchema = (translate: ReturnType<typeof useLanguage>["t"]) =>
+    t.Object({
+        email: t.String({
+            format: "email",
+            error: translate("auth.invalidEmail"),
+        }),
+        password: t.String({
+            minLength: 8,
+            error: translate("auth.passwordMinLength", { count: 8 }),
+        }),
+    });
 
-type FormSchema = Static<typeof formSchema>;
+type FormSchema = Static<ReturnType<typeof createFormSchema>>;
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+    const { t: translate } = useLanguage();
     const form = useForm<FormSchema>({
-        resolver: typeboxResolver(formSchema),
+        resolver: typeboxResolver(createFormSchema(translate)),
         defaultValues: {
             email: "",
             password: "",
@@ -51,7 +57,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             toast.error(response.error.message);
         }
         if (response.data) {
-            toast.success("Login successful");
+            toast.success(translate("auth.loginSuccess"));
         }
     }
 
@@ -67,7 +73,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                     name="email"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>{translate("auth.email")}</FormLabel>
                             <FormControl>
                                 <Input
                                     placeholder="name@example.com"
@@ -83,7 +89,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                     name="password"
                     render={({ field }) => (
                         <FormItem className="relative">
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>{translate("auth.password")}</FormLabel>
                             <FormControl>
                                 <PasswordInput
                                     placeholder="********"
@@ -95,13 +101,13 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                                 to="/forgot-password"
                                 className="text-muted-foreground absolute -top-0.5 right-0 text-sm font-medium hover:opacity-75"
                             >
-                                Forgot password?
+                                {translate("auth.forgotPassword")}
                             </Link>
                         </FormItem>
                     )}
                 />
                 <Button className="mt-2" disabled={form.formState.isSubmitting}>
-                    Login
+                    {translate("auth.login")}
                 </Button>
 
                 {/* <div className='relative my-2'>

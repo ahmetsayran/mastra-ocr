@@ -18,27 +18,33 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from '#/components/ui/input-otp';
+import { useLanguage } from '#/context/language-context';
 import { cn } from '#/lib/utils';
 import { showSubmittedData } from '#/utils/show-submitted-data';
 
 type OtpFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = z.object({
-  otp: z.string().min(1, { message: 'Please enter your otp code.' }),
-});
+// Error messages follow the selected language
+const createFormSchema = (t: ReturnType<typeof useLanguage>['t']) =>
+  z.object({
+    otp: z.string().min(1, { message: t('auth.enterOtp') }),
+  });
+
+type FormSchema = z.infer<ReturnType<typeof createFormSchema>>;
 
 export function OtpForm({ className, ...props }: OtpFormProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: { otp: '' },
   });
 
   const otp = form.watch('otp');
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: FormSchema) {
     setIsLoading(true);
     showSubmittedData(data);
 
@@ -60,7 +66,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
           name="otp"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="sr-only">One-Time Password</FormLabel>
+              <FormLabel className="sr-only">{t('auth.otpLabel')}</FormLabel>
               <FormControl>
                 <InputOTP
                   maxLength={6}
@@ -88,7 +94,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
           )}
         />
         <Button className="mt-2" disabled={otp.length < 6 || isLoading}>
-          Verify
+          {t('auth.verify')}
         </Button>
       </form>
     </Form>

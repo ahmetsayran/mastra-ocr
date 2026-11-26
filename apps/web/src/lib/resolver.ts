@@ -15,7 +15,9 @@ const parseErrorSchema: ParseErrorSchema<any> = (_errors, validateAllFieldCriter
   const errors: Record<string, FieldError> = {};
   for (; _errors.length; ) {
     const error = _errors[0];
-    const { type, message, path } = error;
+    const { type, schema, path } = error;
+    // A schema can set its own error message (e.g. a translated one) with the `error` option
+    const message = typeof schema.error === 'string' ? schema.error : error.message;
     const _path = path.substring(1).replace(/\//g, '.');
 
     if (!errors[_path]) {
@@ -31,7 +33,7 @@ const parseErrorSchema: ParseErrorSchema<any> = (_errors, validateAllFieldCriter
         validateAllFieldCriteria,
         errors,
         '' + type,
-        messages ? ([] as string[]).concat(messages as string[], error.message) : error.message,
+        messages ? ([] as string[]).concat(messages as string[], message) : message,
       ) as FieldError;
     }
 

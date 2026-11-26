@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
+import { useLanguage } from '#/context/language-context';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -63,8 +64,9 @@ export function DataTable<TData>({
   pageCount,
   onPaginationChange,
   pagination: externalPagination,
-  emptyMessage = 'Sonuç bulunamadı.',
+  emptyMessage,
 }: DataTableProps<TData>) {
+  const { t } = useLanguage();
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -138,7 +140,7 @@ export function DataTable<TData>({
                 <TableCell colSpan={columns.length} className="h-24 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span className="text-muted-foreground">Yükleniyor...</span>
+                    <span className="text-muted-foreground">{t('table.loading')}</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -173,7 +175,7 @@ export function DataTable<TData>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  {emptyMessage}
+                  {emptyMessage ?? t('table.noResults')}
                 </TableCell>
               </TableRow>
             )}

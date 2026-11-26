@@ -8,29 +8,28 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card';
+import { useLanguage } from '#/context/language-context';
 
 export const Route = createFileRoute('/(auth)/otp')({
   component: Otp,
 });
 
 function Otp() {
+  const { t } = useLanguage();
   return (
     <Card className="gap-4">
       <CardHeader>
-        <CardTitle className="text-base tracking-tight">Two-factor Authentication</CardTitle>
-        <CardDescription>
-          Please enter the authentication code. <br /> We have sent the authentication code to your
-          email.
-        </CardDescription>
+        <CardTitle className="text-base tracking-tight">{t('auth.otpTitle')}</CardTitle>
+        <CardDescription>{t('auth.otpDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <OtpForm />
       </CardContent>
       <CardFooter>
         <p className="text-muted-foreground px-8 text-center text-sm">
-          Haven't received it?{' '}
+          {t('auth.notReceived')}{' '}
           <Link to="/sign-in" className="hover:text-primary underline underline-offset-4">
-            Resend a new code.
+            {t('auth.resendCode')}
           </Link>
           .
         </p>

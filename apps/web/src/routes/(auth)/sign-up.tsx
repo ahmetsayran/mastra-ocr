@@ -8,21 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card';
+import { useLanguage } from '#/context/language-context';
 
 export const Route = createFileRoute('/(auth)/sign-up')({
   component: SignUp,
 });
 
 function SignUp() {
+  const { t } = useLanguage();
   return (
     <Card className="gap-4">
       <CardHeader>
-        <CardTitle className="text-lg tracking-tight">Create an account</CardTitle>
+        <CardTitle className="text-lg tracking-tight">{t('auth.createAccountTitle')}</CardTitle>
         <CardDescription>
-          Enter your email and password to create an account. <br />
-          Already have an account?{' '}
+          {t('auth.createAccountDescription')} <br />
+          {t('auth.haveAccount')}{' '}
           <Link to="/sign-in" className="hover:text-primary underline underline-offset-4">
-            Sign In
+            {t('auth.signIn')}
           </Link>
         </CardDescription>
       </CardHeader>
@@ -31,13 +33,13 @@ function SignUp() {
       </CardContent>
       <CardFooter>
         <p className="text-muted-foreground px-8 text-center text-sm">
-          By creating an account, you agree to our{' '}
+          {t('auth.signUpAgreement')}{' '}
           <a href="/terms" className="hover:text-primary underline underline-offset-4">
-            Terms of Service
+            {t('auth.termsOfService')}
           </a>{' '}
-          and{' '}
+          {t('auth.and')}{' '}
           <a href="/privacy" className="hover:text-primary underline underline-offset-4">
-            Privacy Policy
+            {t('auth.privacyPolicy')}
           </a>
           .
         </p>

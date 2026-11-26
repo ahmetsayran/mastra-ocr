@@ -14,36 +14,42 @@ import {
   FormMessage,
 } from '#/components/ui/form';
 import { Input } from '#/components/ui/input';
+import { useLanguage } from '#/context/language-context';
 import { cn } from '#/lib/utils';
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = z
-  .object({
-    email: z
-      .string()
-      .min(1, { message: 'Please enter your email' })
-      .email({ message: 'Invalid email address' }),
-    password: z
-      .string()
-      .min(1, {
-        message: 'Please enter your password',
-      })
-      .min(7, {
-        message: 'Password must be at least 7 characters long',
-      }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  });
+// Error messages follow the selected language
+const createFormSchema = (t: ReturnType<typeof useLanguage>['t']) =>
+  z
+    .object({
+      email: z
+        .string()
+        .min(1, { message: t('auth.enterEmail') })
+        .email({ message: t('auth.invalidEmail') }),
+      password: z
+        .string()
+        .min(1, {
+          message: t('auth.enterPassword'),
+        })
+        .min(7, {
+          message: t('auth.passwordMinLength', { count: 7 }),
+        }),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('auth.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
+
+type FormSchema = z.infer<ReturnType<typeof createFormSchema>>;
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
       email: '',
       password: '',
@@ -51,7 +57,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: FormSchema) {
     setIsLoading(true);
     // eslint-disable-next-line no-console
     console.log(data);
@@ -73,7 +79,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('auth.email')}</FormLabel>
               <FormControl>
                 <Input placeholder="name@example.com" {...field} />
               </FormControl>
@@ -86,7 +92,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('auth.password')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder="********" {...field} />
               </FormControl>
@@ -99,7 +105,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>{t('auth.confirmPassword')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder="********" {...field} />
               </FormControl>
@@ -108,7 +114,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           )}
         />
         <Button className="mt-2" disabled={isLoading}>
-          Create Account
+          {t('auth.createAccount')}
         </Button>
 
         <div className="relative my-2">
@@ -116,7 +122,9 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background text-muted-foreground px-2">Or continue with</span>
+            <span className="bg-background text-muted-foreground px-2">
+              {t('auth.orContinueWith')}
+            </span>
           </div>
         </div>
 

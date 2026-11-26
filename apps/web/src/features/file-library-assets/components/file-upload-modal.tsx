@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
+import { useLanguage } from '#/context/language-context';
 
 import type { FileLibraryAssetCreateInput } from '#backend/modules/file-library-assets/types';
 import { FileImage, FileText, FileVideo, Upload, X } from 'lucide-react';
@@ -78,6 +79,7 @@ export function FileUploadModal({
   onUpload,
   isUploading = false,
 }: FileUploadModalProps) {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [assetType, setAssetType] = useState<FileLibraryAssetCreateInput["type"] | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -166,9 +168,9 @@ export function FileUploadModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Upload File</DialogTitle>
+          <DialogTitle>{t('fileLibrary.upload')}</DialogTitle>
           <DialogDescription>
-            Upload a new file to the library. Supported formats: images, videos, and documents.
+            {t('fileLibrary.uploadDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -199,12 +201,12 @@ export function FileUploadModal({
               />
               <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               {isDragActive ? (
-                <p className="text-primary font-medium">Drop the file here...</p>
+                <p className="text-primary font-medium">{t('fileLibrary.dropHere')}</p>
               ) : (
                 <>
-                  <p className="text-sm font-medium">Drag & drop a file here</p>
+                  <p className="text-sm font-medium">{t('fileLibrary.dragDrop')}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    or click to select a file
+                    {t('fileLibrary.clickToSelect')}
                   </p>
                 </>
               )}
@@ -217,7 +219,7 @@ export function FileUploadModal({
                   {previewUrl ? (
                     <img
                       src={previewUrl}
-                      alt="Preview"
+                      alt={t('fileLibrary.preview')}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
                   ) : (
@@ -236,7 +238,7 @@ export function FileUploadModal({
                     {formatFileSize(selectedFile.size)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {selectedFile.type || 'Unknown type'}
+                    {selectedFile.type || t('fileLibrary.unknownType')}
                   </p>
                 </div>
                 
@@ -255,18 +257,18 @@ export function FileUploadModal({
 
           {/* Asset Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="asset-type">Asset Type</Label>
+            <Label htmlFor="asset-type">{t('fileLibrary.assetType')}</Label>
             <Select
               value={assetType ?? ""}
               onValueChange={(value) => setAssetType(value as FileLibraryAssetCreateInput["type"])}
             >
               <SelectTrigger id="asset-type">
-                <SelectValue placeholder="Select asset type" />
+                <SelectValue placeholder={t('fileLibrary.selectAssetType')} />
               </SelectTrigger>
               <SelectContent>
                 {Object.values(FileLibraryAssetTypeEnum).map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type.replace(/_/g, ' ')}
+                    {t(`assetType.${type}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -276,7 +278,7 @@ export function FileUploadModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={isUploading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleSubmit} 
@@ -285,12 +287,12 @@ export function FileUploadModal({
             {isUploading ? (
               <>
                 <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Uploading...
+                {t('fileLibrary.uploading')}
               </>
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Upload
+                {t('fileLibrary.uploadButton')}
               </>
             )}
           </Button>

@@ -10,11 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
+import { useLanguage } from '#/context/language-context';
 import { AuditLogAction, AuditLogEntity } from '#backend/modules/audit-logs/constants';
 import { type PaginationState } from '@tanstack/react-table';
 import { RotateCcw, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { auditLogsColumns } from '../columns/audit-log.columns';
+import { useEffect, useMemo, useState } from 'react';
+import { createAuditLogsColumns } from '../columns/audit-log.columns';
 import { useAuditLogs } from '../hooks/use-audit-logs';
 
 // Custom hook for debouncing
@@ -35,6 +36,9 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function AuditLogsIndexPage() {
+  const { t, language } = useLanguage();
+  const columns = useMemo(() => createAuditLogsColumns(t, language), [t, language]);
+
   // State for filters
   const [searchKeyword, setSearchKeyword] = useState('');
   const debouncedSearchKeyword = useDebounce(searchKeyword, 300);
@@ -89,10 +93,10 @@ export default function AuditLogsIndexPage() {
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Audit Logs</h1>
+          <h1 className="text-2xl font-bold">{t('auditLogs.title')}</h1>
         </div>
         <p className="text-muted-foreground">
-          View system audit logs. Track user actions and changes across the application.
+          {t('auditLogs.description')}
         </p>
       </div>
 
@@ -100,11 +104,11 @@ export default function AuditLogsIndexPage() {
       <div className="flex flex-wrap items-end gap-4">
         {/* Search by user name */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">User Name</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.userName')}</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by user name..."
+              placeholder={t('auditLogs.searchPlaceholder')}
               className="pl-9 w-64"
               value={searchKeyword}
               onChange={(e) => {
@@ -116,7 +120,7 @@ export default function AuditLogsIndexPage() {
 
         {/* Action Type Filter */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">Action Type</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.actionType')}</label>
           <Select
             value={actionTypeFilter || 'all'}
             onValueChange={(value) => {
@@ -125,13 +129,13 @@ export default function AuditLogsIndexPage() {
             }}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All Actions" />
+              <SelectValue placeholder={t('auditLogs.allActions')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
+              <SelectItem value="all">{t('auditLogs.allActions')}</SelectItem>
               {Object.values(AuditLogAction).map((action) => (
                 <SelectItem key={action} value={action}>
-                  {action}
+                  {t(`auditAction.${action}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -140,7 +144,7 @@ export default function AuditLogsIndexPage() {
 
         {/* Entity Type Filter */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">Entity Type</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.entityType')}</label>
           <Select
             value={entityTypeFilter || 'all'}
             onValueChange={(value) => {
@@ -149,13 +153,13 @@ export default function AuditLogsIndexPage() {
             }}
           >
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All Entities" />
+              <SelectValue placeholder={t('auditLogs.allEntities')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Entities</SelectItem>
+              <SelectItem value="all">{t('auditLogs.allEntities')}</SelectItem>
               {Object.values(AuditLogEntity).map((entity) => (
                 <SelectItem key={entity} value={entity}>
-                  {entity}
+                  {t(`auditEntity.${entity}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -164,7 +168,7 @@ export default function AuditLogsIndexPage() {
 
         {/* Start Date */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">Start Date</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.startDate')}</label>
           <Input
             type="datetime-local"
             className="w-[200px]"
@@ -178,7 +182,7 @@ export default function AuditLogsIndexPage() {
 
         {/* End Date */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">End Date</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.endDate')}</label>
           <Input
             type="datetime-local"
             className="w-[200px]"
@@ -192,7 +196,7 @@ export default function AuditLogsIndexPage() {
 
         {/* Order By */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-muted-foreground">Sort Order</label>
+          <label className="text-sm font-medium text-muted-foreground">{t('auditLogs.sortOrder')}</label>
           <Select
             value={orderBy}
             onValueChange={(value: 'asc' | 'desc') => {
@@ -201,11 +205,11 @@ export default function AuditLogsIndexPage() {
             }}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort Order" />
+              <SelectValue placeholder={t('auditLogs.sortOrder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="desc">Newest First</SelectItem>
-              <SelectItem value="asc">Oldest First</SelectItem>
+              <SelectItem value="desc">{t('auditLogs.newestFirst')}</SelectItem>
+              <SelectItem value="asc">{t('auditLogs.oldestFirst')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -213,12 +217,12 @@ export default function AuditLogsIndexPage() {
         {/* Reset Filters Button */}
         <Button variant="outline" onClick={handleResetFilters} className="h-10">
           <RotateCcw className="w-4 h-4 mr-2" />
-          Reset
+          {t('table.reset')}
         </Button>
 
         {/* Refresh Button */}
         <Button variant="outline" onClick={() => refetch()} className="h-10">
-          Refresh
+          {t('table.refresh')}
         </Button>
       </div>
 
@@ -226,14 +230,14 @@ export default function AuditLogsIndexPage() {
       <Card>
         <CardContent className="p-0">
           <DataTable
-            columns={auditLogsColumns}
+            columns={columns}
             data={auditLogs || []}
             isLoading={isLoading}
             manualPagination
             pageCount={meta?.pageCount ?? -1}
             pagination={pagination}
             onPaginationChange={handlePaginationChange}
-            emptyMessage="No audit logs found."
+            emptyMessage={t('auditLogs.empty')}
           />
         </CardContent>
       </Card>
@@ -241,9 +245,11 @@ export default function AuditLogsIndexPage() {
       {/* Pagination Info */}
       {meta && (
         <div className="text-sm text-muted-foreground">
-          Showing {(pagination.pageIndex * pagination.pageSize) + 1} to{' '}
-          {Math.min((pagination.pageIndex + 1) * pagination.pageSize, meta.total)} of{' '}
-          {meta.total} audit logs
+          {t('auditLogs.showing', {
+            from: (pagination.pageIndex * pagination.pageSize) + 1,
+            to: Math.min((pagination.pageIndex + 1) * pagination.pageSize, meta.total),
+            total: meta.total,
+          })}
         </div>
       )}
       </div>

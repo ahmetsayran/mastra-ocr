@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import type { useLanguage } from '#/context/language-context';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Eye, FileImage, FileText, FileVideo, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -65,11 +66,13 @@ export type FileLibraryAssetActions = {
 // Column definitions factory
 // ====================================================================
 export const createFileLibraryAssetColumns = (
+  t: ReturnType<typeof useLanguage>['t'],
+  language: ReturnType<typeof useLanguage>['language'],
   actions?: FileLibraryAssetActions
 ): ColumnDef<FileLibraryAssetShowResponse>[] => [
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: t('fileLibrary.name'),
     cell: ({ row }) => {
       const name = row.getValue('name') as string;
       const title = row.original.title;
@@ -94,12 +97,11 @@ export const createFileLibraryAssetColumns = (
   },
   {
     accessorKey: 'type',
-    header: 'Type',
+    header: t('file.type'),
     cell: ({ row }) => {
-      const type = row.getValue('type') as string;
       return (
         <Badge variant="outline" className="text-xs">
-          {type.replace(/_/g, ' ')}
+          {t(`assetType.${row.original.type}`)}
         </Badge>
       );
     },
@@ -109,12 +111,12 @@ export const createFileLibraryAssetColumns = (
   },
   {
     accessorKey: 'fileType',
-    header: 'File Type',
+    header: t('file.fileType'),
     cell: ({ row }) => {
-      const fileType = row.getValue('fileType') as string;
+      const fileType = row.original.fileType;
       return (
         <Badge variant="secondary" className={getFileTypeBadgeVariant(fileType)}>
-          {fileType}
+          {t(`fileType.${fileType}`)}
         </Badge>
       );
     },
@@ -124,7 +126,7 @@ export const createFileLibraryAssetColumns = (
   },
   {
     accessorKey: 'mimeType',
-    header: 'MIME Type',
+    header: t('file.mimeType'),
     cell: ({ row }) => {
       const mimeType = row.getValue('mimeType') as string;
       return (
@@ -139,7 +141,7 @@ export const createFileLibraryAssetColumns = (
   },
   {
     accessorKey: 'size',
-    header: 'Size',
+    header: t('file.size'),
     cell: ({ row }) => {
       const size = row.getValue('size') as string;
       return (
@@ -154,14 +156,14 @@ export const createFileLibraryAssetColumns = (
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created',
+    header: t('file.created'),
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string;
       const date = new Date(createdAt);
       return (
         <div className="flex flex-col">
-          <span className="text-sm">{date.toLocaleDateString()}</span>
-          <span className="text-xs text-muted-foreground">{date.toLocaleTimeString()}</span>
+          <span className="text-sm">{date.toLocaleDateString(language)}</span>
+          <span className="text-xs text-muted-foreground">{date.toLocaleTimeString(language)}</span>
         </div>
       );
     },
@@ -171,7 +173,7 @@ export const createFileLibraryAssetColumns = (
   },
   {
     id: 'actions',
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{t('table.actions')}</span>,
     cell: ({ row }) => {
       const asset = row.original;
       
@@ -179,7 +181,7 @@ export const createFileLibraryAssetColumns = (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t('aiBot.openMenu')}</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -187,13 +189,13 @@ export const createFileLibraryAssetColumns = (
             {actions?.onView && (
               <DropdownMenuItem onClick={() => actions.onView?.(asset)}>
                 <Eye className="mr-2 h-4 w-4" />
-                View
+                {t('aiBot.view')}
               </DropdownMenuItem>
             )}
             {actions?.onEdit && (
               <DropdownMenuItem onClick={() => actions.onEdit?.(asset)}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t('file.edit')}
               </DropdownMenuItem>
             )}
             {actions?.onDelete && (
@@ -202,7 +204,7 @@ export const createFileLibraryAssetColumns = (
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t('common.delete')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -214,6 +216,3 @@ export const createFileLibraryAssetColumns = (
     },
   },
 ];
-
-// Default columns without actions
-export const fileLibraryAssetColumns = createFileLibraryAssetColumns();

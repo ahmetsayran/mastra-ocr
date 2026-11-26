@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
+import { useLanguage } from '#/context/language-context';
 import type { FileLibraryAssetShowResponse } from '#backend/modules/file-library-assets/types';
 import { type PaginationState } from '@tanstack/react-table';
 import { Plus, RotateCcw, Search } from 'lucide-react';
@@ -36,14 +37,11 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // File type options for filter
-const FILE_TYPE_OPTIONS = [
-  { value: 'all', label: 'All Types' },
-  { value: 'IMAGE', label: 'Images' },
-  { value: 'VIDEO', label: 'Videos' },
-  { value: 'DOCUMENT', label: 'Documents' },
-];
+const FILE_TYPE_OPTIONS = ['IMAGE', 'VIDEO', 'DOCUMENT'] as const;
 
 export default function FileLibraryAssetsIndexPage() {
+  const { t, language } = useLanguage();
+
   // Filter states
   const [searchKeyword, setSearchKeyword] = useState('');
   const debouncedSearch = useDebounce(searchKeyword, 300);
@@ -165,12 +163,12 @@ export default function FileLibraryAssetsIndexPage() {
 
   // Create columns with actions
   const columns = useMemo(
-    () => createFileLibraryAssetColumns({
+    () => createFileLibraryAssetColumns(t, language, {
       onView: handleView,
       onEdit: handleEdit,
       onDelete: handleDelete,
     }),
-    [handleView, handleEdit, handleDelete]
+    [t, language, handleView, handleEdit, handleDelete]
   );
 
   return (
@@ -179,25 +177,25 @@ export default function FileLibraryAssetsIndexPage() {
         {/* Header */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">File Library</h1>
+            <h1 className="text-2xl font-bold">{t('fileLibrary.title')}</h1>
             <Button onClick={() => setUploadModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Upload File
+              {t('fileLibrary.upload')}
             </Button>
           </div>
           <p className="text-muted-foreground">
-            Manage your uploaded files including images, videos, and documents.
+            {t('fileLibrary.description')}
           </p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Search</label>
+            <label className="text-sm font-medium text-muted-foreground">{t('fileLibrary.search')}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name..."
+                placeholder={t('fileLibrary.searchPlaceholder')}
                 className="pl-9 w-64"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
@@ -206,18 +204,19 @@ export default function FileLibraryAssetsIndexPage() {
           </div>
           
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-muted-foreground">File Type</label>
+            <label className="text-sm font-medium text-muted-foreground">{t('file.fileType')}</label>
             <Select
               value={fileTypeFilter}
               onValueChange={setFileTypeFilter}
             >
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Types" />
+                <SelectValue placeholder={t('fileLibrary.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                {FILE_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                <SelectItem value="all">{t('fileLibrary.allTypes')}</SelectItem>
+                {FILE_TYPE_OPTIONS.map((fileType) => (
+                  <SelectItem key={fileType} value={fileType}>
+                    {t(`fileType.${fileType}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -226,10 +225,10 @@ export default function FileLibraryAssetsIndexPage() {
 
           <Button variant="outline" onClick={handleResetFilters} className="h-10">
             <RotateCcw className="w-4 h-4 mr-2" />
-            Reset
+            {t('table.reset')}
           </Button>
           <Button variant="outline" onClick={() => refetch()} className="h-10">
-            Refresh
+            {t('table.refresh')}
           </Button>
         </div>
 
@@ -244,7 +243,7 @@ export default function FileLibraryAssetsIndexPage() {
               pageCount={meta?.pageCount ?? -1}
               pagination={pagination}
               onPaginationChange={setPagination}
-              emptyMessage="No files found."
+              emptyMessage={t('fileLibrary.empty')}
             />
           </CardContent>
         </Card>
@@ -252,9 +251,11 @@ export default function FileLibraryAssetsIndexPage() {
         {/* Pagination Info */}
         {meta && (
           <div className="text-sm text-muted-foreground">
-            Showing {(pagination.pageIndex * pagination.pageSize) + 1} to{' '}
-            {Math.min((pagination.pageIndex + 1) * pagination.pageSize, meta.total)} of{' '}
-            {meta.total} files
+            {t('fileLibrary.showing', {
+              from: (pagination.pageIndex * pagination.pageSize) + 1,
+              to: Math.min((pagination.pageIndex + 1) * pagination.pageSize, meta.total),
+              total: meta.total,
+            })}
           </div>
         )}
 

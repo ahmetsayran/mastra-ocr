@@ -1,12 +1,16 @@
 import { Badge } from '#/components/ui/badge';
 import { UuidDisplay } from '#/components/ui/uuid-display';
+import type { useLanguage } from '#/context/language-context';
 import type { AuditLogShowResponse } from '#backend/modules/audit-logs/types';
 import { type ColumnDef } from '@tanstack/react-table';
 
-export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
+export const createAuditLogsColumns = (
+  t: ReturnType<typeof useLanguage>['t'],
+  language: ReturnType<typeof useLanguage>['language'],
+): ColumnDef<AuditLogShowResponse>[] => [
   {
     accessorKey: 'user',
-    header: 'User',
+    header: t('auditLogs.user'),
     cell: ({ row }) => {
       const user = row.original.user;
       return (
@@ -18,7 +22,7 @@ export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
   },
   {
     accessorKey: 'actionType',
-    header: 'Action',
+    header: t('auditLogs.action'),
     cell: ({ row }) => {
       const actionType = row.getValue('actionType') as string;
       const colorMap: Record<string, string> = {
@@ -28,26 +32,25 @@ export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
       };
       return (
         <Badge variant="secondary" className={colorMap[actionType] || ''}>
-          {actionType}
+          {t(`auditAction.${row.original.actionType}`)}
         </Badge>
       );
     },
   },
   {
     accessorKey: 'entityType',
-    header: 'Entity Type',
+    header: t('auditLogs.entityType'),
     cell: ({ row }) => {
-      const entityType = row.getValue('entityType') as string;
       return (
         <Badge variant="outline">
-          {entityType}
+          {t(`auditEntity.${row.original.entityType}`)}
         </Badge>
       );
     },
   },
   {
     accessorKey: 'entityUuid',
-    header: 'Entity UUID',
+    header: t('auditLogs.entityUuid'),
     cell: ({ row }) => {
       const uuid = row.getValue('entityUuid') as string;
       return <UuidDisplay uuid={uuid} />;
@@ -55,7 +58,7 @@ export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
   },
   {
     accessorKey: 'description',
-    header: 'Description',
+    header: t('auditLogs.descriptionColumn'),
     cell: ({ row }) => {
       const description = row.getValue('description') as string | null;
       return description ? (
@@ -69,7 +72,7 @@ export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
   },
   {
     accessorKey: 'ipAddress',
-    header: 'IP Address',
+    header: t('auditLogs.ipAddress'),
     cell: ({ row }) => {
       const ipAddress = row.getValue('ipAddress') as string | null;
       return ipAddress ? (
@@ -81,14 +84,14 @@ export const auditLogsColumns: ColumnDef<AuditLogShowResponse>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Date',
+    header: t('auditLogs.date'),
     cell: ({ row }) => {
       const createdAt = row.getValue('createdAt') as string;
       const date = new Date(createdAt);
       return (
         <div className="flex flex-col">
-          <span>{date.toLocaleDateString()}</span>
-          <span className="text-xs text-muted-foreground">{date.toLocaleTimeString()}</span>
+          <span>{date.toLocaleDateString(language)}</span>
+          <span className="text-xs text-muted-foreground">{date.toLocaleTimeString(language)}</span>
         </div>
       );
     },
