@@ -1,16 +1,19 @@
 import prisma from '@onlyjs/db';
-import { ChatMessageRole, FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
+import { ChatMessageRole, Prisma } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
 import { RequestContext } from '@mastra/core/request-context';
 import type { ReadableStreamDefaultReader } from 'stream/web';
 import { mastra } from '../../mastra';
 import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processors/chat-guardrails';
-import { NotFoundException, UnprocessableEntityException } from '../../utils';
-import { toAgentHttpError } from '../../utils/agent-errors';
+import { NotFoundException, toAgentHttpError, UnprocessableEntityException } from '../../utils';
 import { PaginationService } from '../../utils/pagination';
-import { CHAT_HISTORY_LIMIT } from './constants';
-import { FileLibraryAssetsService } from '../file-library-assets';
+import { OcrService } from '../file-library-assets/services/ocr.service';
 import { RagService } from '../file-library-assets/services/rag.service';
+import {
+  CHAT_ATTACHMENT_NOTE,
+  CHAT_DOCUMENT_CONTEXT_PROMPT,
+  CHAT_HISTORY_LIMIT,
+} from './constants';
 import type {
   ThreadAttachmentPayload,
   ThreadCreatePayload,
@@ -118,10 +121,7 @@ export abstract class ThreadsService {
 
   static async attach(uuid: string, { assetUuid }: ThreadAttachmentPayload, resourceId: string) {
     const thread = await this.show(uuid, resourceId);
-    const asset = await FileLibraryAssetsService.show(assetUuid);
-    if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
-      throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
-    }
+    const asset = await OcrService.showDocument(assetUuid);
 
     try {
       return await prisma.chatMessage.create({
@@ -164,7 +164,7 @@ export abstract class ThreadsService {
         .map((message) => ({
           role: message.role === ChatMessageRole.USER ? 'user' : 'assistant',
           content: message.asset
-            ? `[Sohbete belge eklendi: ${message.asset.title ?? message.asset.name} (uuid: ${message.asset.uuid})]`
+            ? CHAT_ATTACHMENT_NOTE(message.asset.title ?? message.asset.name, message.asset.uuid)
             : message.content,
         }));
 
@@ -176,7 +176,7 @@ export abstract class ThreadsService {
       if (chunks.length) {
         context.push({
           role: 'system',
-          content: `Belgelerden ilgili bölümler:\n\n${chunks.map((chunk: { content: string }) => chunk.content).join('\n---\n')}`,
+          content: `${CHAT_DOCUMENT_CONTEXT_PROMPT}\n\n${chunks.map((chunk: { content: string }) => chunk.content).join('\n---\n')}`,
         });
       }
 

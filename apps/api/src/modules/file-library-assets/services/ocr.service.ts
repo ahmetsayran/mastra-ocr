@@ -9,8 +9,12 @@ import {
 import type { z } from 'zod';
 import { getStoragePath } from '../../../core';
 import { mastra } from '../../../mastra';
-import { NotFoundException, splitText, UnprocessableEntityException } from '../../../utils';
-import { toAgentHttpError } from '../../../utils/agent-errors';
+import {
+  NotFoundException,
+  splitText,
+  toAgentHttpError,
+  UnprocessableEntityException,
+} from '../../../utils';
 import {
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_PROMPT,
   FILE_LIBRARY_ASSET_OCR_CLASSIFY_SCHEMA,
@@ -38,11 +42,17 @@ type OcrDocument =
   | { asset: FileLibraryAsset; images: { image: Buffer; mimeType: string }[] };
 
 export abstract class OcrService {
-  private static async loadDocument(uuid: string): Promise<OcrDocument> {
+  // Reading, extraction, chat search and chat attachments only work on OCR documents
+  static async showDocument(uuid: string) {
     const asset = await FileLibraryAssetsService.show(uuid);
     if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
       throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
     }
+    return asset;
+  }
+
+  private static async loadDocument(uuid: string): Promise<OcrDocument> {
+    const asset = await this.showDocument(uuid);
 
     const filePath = getStoragePath(asset.path);
 
@@ -189,7 +199,7 @@ export abstract class OcrService {
     uuid: string,
     { extraction }: FileLibraryAssetExtractionUpdateInput,
   ) {
-    const asset = await FileLibraryAssetsService.show(uuid);
+    const asset = await this.showDocument(uuid);
     const metadata = asset.metadata as { documentType?: FileLibraryAssetOcrDocumentType } | null;
     if (!metadata?.documentType) {
       throw new UnprocessableEntityException('Önce belgedeki bilgileri ayıklayın');

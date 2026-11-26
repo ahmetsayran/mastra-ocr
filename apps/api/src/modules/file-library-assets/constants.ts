@@ -41,6 +41,10 @@ export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_RULES = {
 export const FILE_LIBRARY_ASSET_OCR_PDF_MAX_PAGES = 5;
 export const FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE = 2;
 
+// Free OpenRouter models: the vision model reads documents and answers chats, the embedding model prepares chat search
+export const FILE_LIBRARY_ASSET_OCR_MODEL = 'openrouter/nvidia/nemotron-3.5-super-vl:free';
+export const FILE_LIBRARY_ASSET_RAG_EMBED_MODEL = 'nvidia/nemotron-3.5-embed-1b:free';
+
 export const FILE_LIBRARY_ASSET_OCR_READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 
 export const FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT =

@@ -1,9 +1,8 @@
 import prisma from '@onlyjs/db';
-import { FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
+import { Prisma } from '@onlyjs/db/client';
 import { randomUUID } from 'crypto';
 import { documentEmbedder } from '../../../mastra/embedders/document-embedder';
-import { splitText, UnprocessableEntityException } from '../../../utils';
-import { toAgentHttpError } from '../../../utils/agent-errors';
+import { splitText, toAgentHttpError } from '../../../utils';
 import {
   FILE_LIBRARY_ASSET_RAG_CHUNK_SIZE,
   FILE_LIBRARY_ASSET_RAG_EMBED_BATCH_SIZE,
@@ -49,10 +48,7 @@ export abstract class RagService {
 
   // A failed indexing is marked on the document, so the panel can warn and offer a retry
   static async index(uuid: string) {
-    const asset = await FileLibraryAssetsService.show(uuid);
-    if (asset.type !== FileLibraryAssetType.OCR_DOCUMENT) {
-      throw new UnprocessableEntityException('Bu dosya bir OCR belgesi değil');
-    }
+    const asset = await OcrService.showDocument(uuid);
 
     try {
       // A retry reuses the text that was already read, so no AI request is spent on it again
