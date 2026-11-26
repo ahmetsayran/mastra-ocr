@@ -35,6 +35,7 @@ import {
   NotebookText,
   Pencil,
   Receipt,
+  RotateCw,
   ScanText,
 } from 'lucide-react';
 import { type ExtractionField, ExtractionForm } from './extraction-form';
@@ -49,6 +50,8 @@ interface FileViewModalProps {
   isExtracting: boolean;
   onSummarize: (uuid: string) => Promise<void>;
   isSummarizing: boolean;
+  onIndex: (uuid: string) => Promise<void>;
+  isIndexing: boolean;
   onUpdateExtraction: (uuid: string, extraction: Record<string, unknown>) => Promise<void>;
   isUpdatingExtraction: boolean;
 }
@@ -173,6 +176,8 @@ export function FileViewModal({
   isExtracting,
   onSummarize,
   isSummarizing,
+  onIndex,
+  isIndexing,
   onUpdateExtraction,
   isUpdatingExtraction,
 }: FileViewModalProps) {
@@ -192,6 +197,7 @@ export function FileViewModal({
   const isPdf = asset.mimeType === 'DOCUMENT_PDF';
   const isOcrDocument = asset.type === 'OCR_DOCUMENT';
   const ocrText: string | undefined = asset.metadata?.text;
+  const indexFailed: boolean = asset.metadata?.indexFailed === true;
   const documentType: FileLibraryAssetOcrDocumentType | undefined = asset.metadata?.documentType;
   const extraction: Record<string, unknown> | undefined = asset.metadata?.extraction;
   const lineItems: {
@@ -331,6 +337,27 @@ export function FileViewModal({
               </p>
             </div>
           </div>
+
+          {/* Chat search warning: background indexing failed, so chats cannot find this document */}
+          {isOcrDocument && indexFailed && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-500/40 p-3 text-sm text-amber-600 dark:text-amber-400">
+              <CircleAlert className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{t('file.indexWarning')}</span>
+              <Button variant="outline" size="sm" onClick={() => onIndex(asset.uuid)} disabled={isIndexing}>
+                {isIndexing ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                    {t('file.indexing')}
+                  </>
+                ) : (
+                  <>
+                    <RotateCw className="w-4 h-4 mr-2" />
+                    {t('file.retryIndex')}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* OCR Text */}
           {isOcrDocument && (

@@ -92,7 +92,7 @@ export abstract class OcrService {
     ];
   }
 
-  private static async saveMetadata(uuid: string, data: Record<string, unknown>) {
+  static async saveMetadata(uuid: string, data: Record<string, unknown>) {
     // Row lock: background read and extract must not overwrite each other's metadata
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const [asset] = await tx.$queryRaw<{ metadata: Record<string, unknown> | null }[]>`

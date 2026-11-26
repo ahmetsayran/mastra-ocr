@@ -85,6 +85,8 @@ export default function FileLibraryAssetsIndexPage() {
     isExtracting,
     summarizeFileLibraryAsset,
     isSummarizing,
+    indexFileLibraryAsset,
+    isIndexing,
     updateFileLibraryAssetExtraction,
     isUpdatingExtraction,
   } = useFileLibraryAssets({
@@ -141,6 +143,11 @@ export default function FileLibraryAssetsIndexPage() {
 
   const handleSummarize = async (uuid: string) => {
     const updatedAsset = await summarizeFileLibraryAsset(uuid);
+    setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
+  };
+
+  const handleIndex = async (uuid: string) => {
+    const updatedAsset = await indexFileLibraryAsset(uuid);
     setSelectedAsset((current) => (current?.uuid === uuid ? updatedAsset : current));
   };
 
@@ -285,6 +292,8 @@ export default function FileLibraryAssetsIndexPage() {
           isExtracting={isExtracting}
           onSummarize={handleSummarize}
           isSummarizing={isSummarizing}
+          onIndex={handleIndex}
+          isIndexing={isIndexing}
           onUpdateExtraction={handleUpdateExtraction}
           isUpdatingExtraction={isUpdatingExtraction}
         />

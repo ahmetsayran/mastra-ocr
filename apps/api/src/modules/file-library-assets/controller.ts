@@ -10,6 +10,7 @@ import {
   fileLibraryAssetExtractionUpdateDto,
   fileLibraryAssetIndexDto,
   fileLibraryAssetOcrDto,
+  fileLibraryAssetSearchIndexDto,
   fileLibraryAssetShowDto,
   fileLibraryAssetSummaryDto,
   fileLibraryAssetUpdateDto,
@@ -18,6 +19,7 @@ import { FileLibraryAssetFormatter } from './formatters';
 import { withDocumentIndexing } from './middleware';
 import { FileLibraryAssetsService } from './service';
 import { OcrService } from './services/ocr.service';
+import { RagService } from './services/rag.service';
 
 const fileLibraryAssetsController = new Elysia({
   tags: ['FileLibraryAsset'],
@@ -177,6 +179,22 @@ const fileLibraryAssetOcrController = new Elysia({
         getEntityUuid: ({ params }) => params.uuid!,
         getDescription: () => {
           return 'OCR ile belge özeti çıkarıldı';
+        },
+      }),
+    ),
+  )
+  .post(
+    '/:uuid/search-index',
+    async ({ params }) => RagService.index(params.uuid),
+    dtoWithMiddlewares(
+      fileLibraryAssetSearchIndexDto,
+      withPermission(PERMISSIONS.FILE_LIBRARY_ASSETS.UPDATE),
+      withAuditLog({
+        actionType: AuditLogAction.UPDATE,
+        entityType: AuditLogEntity.FILE_LIBRARY_ASSET,
+        getEntityUuid: ({ params }) => params.uuid!,
+        getDescription: () => {
+          return 'Belge sohbet aramasına hazırlandı';
         },
       }),
     ),

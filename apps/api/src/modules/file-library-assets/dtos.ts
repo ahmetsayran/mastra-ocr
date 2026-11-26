@@ -132,6 +132,14 @@ export const fileLibraryAssetExtractionUpdateDto = {
   },
 } satisfies ControllerHook;
 
+export const fileLibraryAssetSearchIndexDto = {
+  ...fileLibraryAssetOcrDto,
+  detail: {
+    summary: 'Search Index',
+    description: 'Yüklenmiş OCR belgesini sohbet aramasına yeniden hazırlar',
+  },
+} satisfies ControllerHook;
+
 export const fileLibraryAssetSummaryDto = {
   ...fileLibraryAssetOcrDto,
   detail: {

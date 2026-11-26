@@ -108,6 +108,12 @@ const en = {
   'file.summaryFailed': 'Failed to summarize the document',
   'file.extractionSaved': 'Extracted data saved',
   'file.extractionSaveFailed': 'Failed to update extracted data',
+  'file.indexWarning':
+    'This document could not be prepared for chat search, so chats cannot find it.',
+  'file.retryIndex': 'Try Again',
+  'file.indexing': 'Preparing...',
+  'file.indexSuccess': 'Document is ready for chat search',
+  'file.indexFailed': 'Failed to prepare the document for chat search',
 
   // Document types
   'documentType.invoice': 'Invoice',
@@ -265,6 +271,11 @@ const tr: Record<TranslationKey, string> = {
   'file.summaryFailed': 'Belge özetlenemedi',
   'file.extractionSaved': 'Ayıklanan bilgiler kaydedildi',
   'file.extractionSaveFailed': 'Ayıklanan bilgiler güncellenemedi',
+  'file.indexWarning': 'Bu belge sohbet aramasına hazırlanamadı; sohbetler bu belgeyi bulamaz.',
+  'file.retryIndex': 'Tekrar Dene',
+  'file.indexing': 'Hazırlanıyor...',
+  'file.indexSuccess': 'Belge sohbet aramasına hazırlandı',
+  'file.indexFailed': 'Belge sohbet aramasına hazırlanamadı',
 
   // Document types
   'documentType.invoice': 'Fatura',

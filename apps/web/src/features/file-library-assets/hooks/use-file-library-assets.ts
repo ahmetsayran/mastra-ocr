@@ -188,6 +188,35 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
   });
 
   // ====================================================================
+  // 🔎 SEARCH INDEX MUTATION (prepares the document for chat search again)
+  // ====================================================================
+  const searchIndexMutation = useMutation({
+    mutationFn: async (uuid: string) => {
+      const response = await api['file-library-assets']({ uuid })['search-index'].post();
+
+      if (response.error) {
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : t('file.indexFailed');
+        throw new Error(errorMessage);
+      }
+
+      return response.data;
+    },
+    onSuccess: (_, uuid) => {
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(uuid) });
+      toast.success(t('file.indexSuccess'));
+    },
+    onError: (error) => {
+      console.error('Failed to index file library asset:', error);
+      toast.error(error instanceof Error ? error.message : t('file.indexFailed'));
+    },
+  });
+
+  // ====================================================================
   // ✍️ OCR EXTRACTION UPDATE MUTATION
   // ====================================================================
   const ocrExtractionUpdateMutation = useMutation({
@@ -247,6 +276,9 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
 
     summarizeFileLibraryAsset: ocrSummaryMutation.mutateAsync,
     isSummarizing: ocrSummaryMutation.isPending,
+
+    indexFileLibraryAsset: searchIndexMutation.mutateAsync,
+    isIndexing: searchIndexMutation.isPending,
 
     updateFileLibraryAssetExtraction: ocrExtractionUpdateMutation.mutateAsync,
     isUpdatingExtraction: ocrExtractionUpdateMutation.isPending,

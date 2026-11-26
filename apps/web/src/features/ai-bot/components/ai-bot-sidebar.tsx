@@ -92,6 +92,8 @@ export function AiBotSidebar({
     isExtracting,
     summarizeFileLibraryAsset,
     isSummarizing,
+    indexFileLibraryAsset,
+    isIndexing,
     updateFileLibraryAssetExtraction,
     isUpdatingExtraction,
   } = useFileLibraryAssets({
@@ -295,6 +297,10 @@ export function AiBotSidebar({
           await summarizeFileLibraryAsset(uuid);
         }}
         isSummarizing={isSummarizing}
+        onIndex={async (uuid) => {
+          await indexFileLibraryAsset(uuid);
+        }}
+        isIndexing={isIndexing}
         onUpdateExtraction={async (uuid, extraction) => {
           await updateFileLibraryAssetExtraction({ uuid, extraction });
         }}
