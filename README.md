@@ -22,7 +22,7 @@ Proje aşama aşama geliştirildi. Her aşama bittiğinde bu liste güncellenir.
 7. **Belgeler hakkında soru sorma (RAG):** Yüklenen belgeler parçalara bölünüp aranabilir hale getiriliyor; sohbette sorulan soruya belgelerdeki ilgili bölümlerle cevap veriliyor.
 8. **Güvenlik kontrolleri:** Sohbete yazılan "önceki talimatları yok say" gibi saldırı cümleleri engelleniyor; cevaplarda anahtar ve şifre benzeri bilgiler gizleniyor.
 9. **Yapay zekâ araçları:** Yapay zekâ sohbet içinde gönderi yorumlarını listeleyip ekleyebiliyor, güncelleyip silebiliyor; belgeleri listeleyip özetleyebiliyor. Her işlem kullanıcının yetkisine göre yapılıyor ve işlem kaydına yazılıyor.
-10. **Belge özeti (Summarize):** Belgenin 3-5 cümlelik Türkçe özeti çıkarılıp kayda yazılıyor. Aynı belge tekrar istenirse kayıttaki özet kullanılıyor.
+10. **Belge özeti (Summarize):** Belgenin 3-5 cümlelik, düz metin Türkçe özeti çıkarılıp kayda yazılıyor. Aynı belge tekrar istenirse kayıttaki özet kullanılıyor.
 11. **PDF desteği:** Yazılı PDF'lerin yazısı yapay zekâ kullanmadan okunuyor. Taranmış (yazısı resim olan) PDF'lerin sayfaları görsele çevrilip yapay zekâya okutuluyor.
 12. **AI Bot sayfası:** Sohbet, belge yükleme ve belge analizi tek sayfada. Sol menüde sohbetler ve belgeler (**Records**), her kayıtta yeniden adlandırma ve silme menüsü var. Koyu ve açık tema, telefon görünümü destekleniyor.
 13. **Sohbete belge ekleme:** Sohbette eklenen belge mesajların arasında kart olarak görünüyor. Sohbete belge eklendiyse sorular o belgelerde aranıyor.
@@ -34,8 +34,11 @@ Proje aşama aşama geliştirildi. Her aşama bittiğinde bu liste güncellenir.
 19. **Elle düzeltme:** Ayıklanan bilgiler bir formla düzeltilip kaydedilebiliyor; kaydedince kontroller yeniden yapılıyor.
 20. **CSV indirme:** Ayıklanan bilgiler Excel'de doğru açılan bir CSV dosyası olarak indirilebiliyor.
 21. **Uzun belge koruması:** Çok uzun belgeler model sınırını aşmayacak şekilde parça parça işleniyor.
-22. **Dil seçimi:** Panel Türkçe veya İngilizce kullanılabiliyor.
+22. **Dil seçimi:** Panel Türkçe veya İngilizce kullanılabiliyor. Giriş, hata, dosya kütüphanesi ve işlem kayıtları sayfaları da seçilen dilde açılıyor.
 23. **Otomatik testler:** Metin bölme, yapay zekâ hata mesajları ve doğrulama kuralları için testler var.
+24. **Arama hazırlığı uyarısı:** Belge sohbet aramasına hazırlanamazsa belge penceresinde uyarı çıkıyor; **Try Again** ile tekrar denenebiliyor. Okunmuş yazı yeniden kullanıldığı için tekrar okuma isteği harcanmıyor.
+25. **Boş sohbet kalmaz:** Yeni bir sohbetin ilk mesajı veya ilk belgesi gönderilemezse o sohbet kayıtlardan kaldırılıyor.
+26. **Sözleşme tarafları:** Sözleşmelerde her taraf rolüyle birlikte ayıklanıyor (örnek: *Kiracı: Ali Yılmaz*).
 
 **💡 İleride eklenebilecekler:** belge şablonları, toplu belge yükleme, sohbet içinde belge önizlemesi.
 
@@ -161,13 +164,14 @@ Her şey tek sayfada yapılır:
    - **Summarize** — belgenin kısa özetini çıkarır,
    - **Open / Download** — dosyayı açar veya indirir.
    Sonuçlar aynı pencerede ilgili başlığın altında görünür ve kaydedilir; pencereyi kapatıp açsanız da kaybolmaz.
+   Belge sohbet aramasına hazırlanamadıysa pencerede sarı bir uyarı görünür; **Try Again** ile tekrar deneyin.
 4. **Ayıklanan bilgileri kontrol edin:** **Extracted Data** başlığının altında kontrol sonucu görünür: her şey tutuyorsa yeşil **All checks passed**, tutmayan bir şey varsa sarı uyarılar (örnek: *"Subtotal + VAT is 18600, but the total is 18000"*).
-   - **Edit** — bilgileri bir formda düzeltip **Save Changes** ile kaydedersiniz; kontroller yeniden yapılır. Kalem satırı ekleyip silebilirsiniz.
+   - **Edit** — bilgileri bir formda düzeltip **Save Changes** ile kaydedersiniz; kontroller yeniden yapılır. Kalem satırı ekleyip silebilirsiniz. Sözleşme taraflarını her satıra bir taraf olacak şekilde *Rol: Ad* biçiminde yazın.
    - **CSV** — ayıklanan bilgileri ve kalem satırlarını Excel'de açılabilen bir dosya olarak indirir.
 5. **Kayıtları yönetin:** Records'ta bir kaydın üzerine gelince sağında **⋯** belirir. Sohbetleri **Rename** ile yeniden adlandırabilir, **Delete** ile silebilirsiniz. Belgelerde ayrıca **View** vardır. Listenin üstündeki arama kutusuyla adlarda arama yapabilir, liste uzunsa en alttaki **Show more** ile devamını açabilirsiniz.
 6. **Görünüm ve dil:** Sağ üstteki ay/güneş simgesiyle koyu ve açık tema arasında geçiş yapabilirsiniz. Yanındaki dil simgesinden **English** veya **Türkçe** seçebilirsiniz; seçiminiz hatırlanır. Sol menünün kenarını sürükleyerek genişliğini ayarlayabilirsiniz.
 
-> 🌐 Bu rehberdeki buton adları İngilizce görünüme göredir. Türkçe görünümde karşılıkları: **Records** → Kayıtlar, **New chat** → Yeni sohbet, **Show more** → Daha fazla göster, **Read Text** → Metni Oku, **Extract Data** → Bilgileri Ayıkla, **Summarize** → Özetle, **Edit** → Düzenle, **Rename** → Yeniden adlandır, **Delete** → Sil.
+> 🌐 Bu rehberdeki buton adları İngilizce görünüme göredir. Türkçe görünümde karşılıkları: **Records** → Kayıtlar, **New chat** → Yeni sohbet, **Show more** → Daha fazla göster, **Read Text** → Metni Oku, **Extract Data** → Bilgileri Ayıkla, **Summarize** → Özetle, **Edit** → Düzenle, **Try Again** → Tekrar Dene, **Rename** → Yeniden adlandır, **Delete** → Sil.
 
 Belgeler ayrıca **Dosya Kütüphanesi** sayfasında (`http://localhost:5173/file-library`) tablo halinde görülebilir. Yapılan her işlem (kim, ne zaman, ne yaptı) **işlem kayıtları** sayfasında (`http://localhost:5173/audit-logs`) listelenir.
 
@@ -189,6 +193,8 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
                       düzeltilen bilgiler kaydedilir, kontroller yeniden yapılır
 4) Özet çıkar       → POST /file-library-assets/{uuid}/summary
                       belgenin kısa özeti çıkarılır, aynı kayda eklenir
+   Aramaya hazırla  → POST /file-library-assets/{uuid}/search-index
+                      arka plandaki hazırlık başarısız olduysa belge yeniden aranabilir hale getirilir
 5) Sohbete ekle     → POST /threads/{uuid}/attachments
                       belge sohbete eklenir, o sohbetteki sorular bu belgede aranır
 6) Soru sor         → POST /threads/{uuid}/messages
@@ -212,7 +218,7 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 |---|---|
 | Fatura | fatura no, tarih, satıcı, alıcı, ara toplam (KDV hariç), KDV, genel toplam, para birimi, kalem satırları |
 | Fiş / makbuz | mağaza, tarih, KDV, toplam, ödeme şekli, para birimi, kalem satırları |
-| Sözleşme | sözleşme adı, taraflar, başlangıç ve bitiş tarihi, tutar, para birimi, ödeme koşulları |
+| Sözleşme | sözleşme adı, taraflar (rol ve ad), başlangıç ve bitiş tarihi, tutar, para birimi, ödeme koşulları |
 | Kimlik (kimlik kartı, ehliyet, pasaport) | ad soyad, kimlik no, doğum tarihi, uyruk, belge no, son geçerlilik tarihi |
 | Diğer | başlık, tarih, düzenleyen, en önemli bilgiler (en fazla 5) |
 
@@ -256,7 +262,7 @@ Belgelerdeki yuvarlamalar yüzünden 0,05'e kadar olan tutar farkları sorun say
 Proje, hazır altyapının kurallarına göre yazılmıştır. Yeni bir özellik eklerken aynı düzeni izleyin:
 
 - **Yeni bir API özelliği:** `apps/api/src/modules/` altında, `posts` modülündeki gibi `controller.ts`, `dtos.ts`, `service.ts`, `formatters.ts`, `types.ts`, `index.ts` dosyalarıyla bir modül açın. Yetkileri `modules/auth/authorization/permissions/constants.ts`, işlem kaydı türlerini `modules/audit-logs/constants.ts` içine ekleyin.
-- **Ayarlar ve yapay zekâ komutları:** İlgili modülün `constants.ts` dosyasına yazın (örnek: `modules/file-library-assets/constants.ts` içindeki okuma, ayıklama ve özet komutları).
+- **Ayarlar ve yapay zekâ komutları:** İlgili modülün `constants.ts` dosyasına yazın. Örnekler: `modules/file-library-assets/constants.ts` içinde kullanılan modeller ile okuma, ayıklama ve özet komutları; `modules/threads/constants.ts` içinde ajanın talimatları, sohbet komutları ve güvenlik kuralları.
 - **Yapay zekâ parçaları:** Ajan, araçlar, güvenlik kontrolleri ve embedding modeli `apps/api/src/mastra/` klasöründedir. Yeni bir araç eklerseniz `mastra/tools/` altına yazıp `mastra/agents/ocr-agent.ts` içinde ajana tanıtın.
 - **Veritabanı değişikliği:** `packages/database/schema.prisma` dosyasını düzenleyip `packages/database` klasöründe `bun run prisma migrate dev` çalıştırın.
 - **Panelde yeni bir sayfa veya bileşen:** `apps/web/src/features/` altında `pages`, `hooks`, `queries`, `components` klasörleriyle bir özellik klasörü açın; sayfanın adresini `apps/web/src/routes/` altına ekleyin.
@@ -274,6 +280,7 @@ Proje, hazır altyapının kurallarına göre yazılmıştır. Yeni bir özellik
 - **Cevap akışı:** Cevap, yapay zekâ yazdıkça parça parça gelir. Kullanılan model yazmaya başlamadan önce bir süre düşündüğü için ilk kelimenin gelmesi 15-25 saniye sürebilir.
 - **Uzun belgeler daha çok istek harcar:** 20.000 karakterden uzun bir belgenin özeti her 20.000 karakterlik bölüm için 1 istek, birleştirmek için de 1 istek harcar.
 - **Elle düzeltme** sadece bilgileri ayıklanmış belgelerde yapılabilir.
+- **Okuma, ayıklama, özet, arama hazırlığı ve sohbete ekleme** sadece AI Bot'tan veya `OCR_DOCUMENT` türüyle yüklenen belgelerde çalışır.
 - **Dil seçimi** panel yazılarını değiştirir. Yapay zekâ, soruyu hangi dilde yazdıysanız o dilde cevap verir. Sunucudan gelen hata mesajları Türkçedir.
 
 ---
@@ -321,6 +328,12 @@ pgvector eklentisi kurulu değil. Ön Gereksinimler bölümündeki 3. adımı ya
 
 ### 💡 "Mesaj güvenlik kontrolüne takıldı"
 Mesajınız güvenlik kurallarına takıldı: "önceki talimatları yok say", "sistem talimatı" gibi ifadeler veya anahtar/şifre benzeri bilgiler içeriyor. Sorunuzu bunlar olmadan yeniden yazın.
+
+### 💡 "Belge sohbet aramasına hazırlanamadı, tekrar deneyin"
+Belge yüklenirken arka planda yapılan arama hazırlığı başarısız oldu (çoğunlukla yapay zekâ sınırı dolduğu için). Belge penceresindeki **Try Again** butonuna basın; sınır doluysa bir süre sonra tekrar deneyin.
+
+### 💡 "Bu dosya bir OCR belgesi değil"
+Bu işlemler sadece `OCR_DOCUMENT` türündeki belgelerde yapılabilir. Belgeyi AI Bot sayfasındaki ataş butonuyla veya dosya kütüphanesinde **OCR Document** türünü seçerek yükleyin.
 
 ### 💡 "Önce belgedeki bilgileri ayıklayın"
 Elle düzeltme için önce **Extract Data** ile belgenin bilgilerini ayıklatın.
