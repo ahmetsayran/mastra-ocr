@@ -775,8 +775,8 @@ model ChatMessage {
   /// @prismabox.options{minLength:1}
   content String @db.Text
 
-  // Document attached to the chat with this message (null for plain messages)
-  asset   FileLibraryAsset? @relation("ChatMessageToFileLibraryAsset", fields: [assetId], references: [id], onDelete: SetNull)
+  // Document attached to the chat with this message (null for plain messages); deleting the document removes its card
+  asset   FileLibraryAsset? @relation("ChatMessageToFileLibraryAsset", fields: [assetId], references: [id], onDelete: Cascade)
   /// @prismabox.hide
   assetId Int?              @map("asset_id")
 

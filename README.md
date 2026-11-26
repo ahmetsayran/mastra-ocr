@@ -280,6 +280,7 @@ Proje, hazır altyapının kurallarına göre yazılmıştır. Yeni bir özellik
 - **Cevap akışı:** Cevap, yapay zekâ yazdıkça parça parça gelir. Kullanılan model yazmaya başlamadan önce bir süre düşündüğü için ilk kelimenin gelmesi 15-25 saniye sürebilir.
 - **Uzun belgeler daha çok istek harcar:** 20.000 karakterden uzun bir belgenin özeti her 20.000 karakterlik bölüm için 1 istek, birleştirmek için de 1 istek harcar.
 - **Elle düzeltme** sadece bilgileri ayıklanmış belgelerde yapılabilir.
+- **Belge silinirse** o belgenin sohbetlerdeki kartları da silinir; sohbetin diğer mesajları kalır.
 - **Okuma, ayıklama, özet, arama hazırlığı ve sohbete ekleme** sadece AI Bot'tan veya `OCR_DOCUMENT` türüyle yüklenen belgelerde çalışır.
 - **Dil seçimi** panel yazılarını değiştirir. Yapay zekâ, soruyu hangi dilde yazdıysanız o dilde cevap verir. Sunucudan gelen hata mesajları Türkçedir.
 
