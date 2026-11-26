@@ -59,6 +59,12 @@ export function useAiBot(threadId?: string) {
   const [streamedReply, setStreamedReply] = useState('');
   const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
 
+  // A new chat whose first message or document failed has nothing in it, so it is removed from the records
+  const removeEmptyThread = async (uuid: string) => {
+    await api.threads({ uuid }).delete();
+    await queryClient.invalidateQueries({ queryKey: threadKeys.lists() });
+  };
+
   const sendMutation = useMutation({
     mutationFn: async (content: string) => {
       setPendingMessage(content);
@@ -76,11 +82,16 @@ export function useAiBot(threadId?: string) {
           (chunk) => setStreamedReply((reply) => reply + chunk),
           t('aiBot.sendFailed'),
         );
-      } finally {
-        await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
+      } catch (error) {
         if (!threadId) {
-          await navigate({ to: '/ai/bot/$uuid', params: { uuid: targetThreadId } });
+          await removeEmptyThread(targetThreadId);
         }
+        throw error;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: threadKeys.detail(targetThreadId) });
+      if (!threadId) {
+        await navigate({ to: '/ai/bot/$uuid', params: { uuid: targetThreadId } });
       }
     },
     onError: (error) => {
@@ -101,6 +112,9 @@ export function useAiBot(threadId?: string) {
 
       const response = await api.threads({ uuid: targetThreadId }).attachments.post({ assetUuid });
       if (response.error) {
+        if (!threadId) {
+          await removeEmptyThread(targetThreadId);
+        }
         const errorValue = response.error.value;
         const errorMessage =
           typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
