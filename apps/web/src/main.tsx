@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 // Generated Routes
 import { handleServerError } from '#/utils/handle-server-error';
 import { FontProvider } from './context/font-context';
-import { LanguageProvider } from './context/language-context';
+import { LanguageProvider, translate } from './context/language-context';
 import { ThemeProvider } from './context/theme-context';
 import './styles/index.css';
 import { routeTree } from './routeTree.gen';
@@ -36,7 +36,7 @@ const queryClient = new QueryClient({
   },
   queryCache: new QueryCache({
     onError: () => {
-      toast.error('Something went wrong!');
+      toast.error(translate('common.somethingWentWrong'));
       // Error handling is managed by route guards and API interceptors
     },
   }),

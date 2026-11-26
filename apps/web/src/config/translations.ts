@@ -24,6 +24,10 @@ const en = {
   'common.system': 'System',
   'common.toggleTheme': 'Toggle theme',
   'common.language': 'Language',
+  'common.close': 'Close',
+  'common.toggleSidebar': 'Toggle Sidebar',
+  'common.somethingWentWrong': 'Something went wrong!',
+  'common.contentNotFound': 'Content not found.',
 
   // AI Bot page
   'aiBot.newChat': 'New chat',
@@ -100,6 +104,9 @@ const en = {
   'file.open': 'Open',
   'file.download': 'Download',
   'file.csvName': 'extracted-data',
+  'file.uploadFailed': 'Failed to upload the file',
+  'file.updateFailed': 'Failed to update the file',
+  'file.deleteFailed': 'Failed to delete the file',
   'file.readSuccess': 'Text read successfully',
   'file.readFailed': 'Failed to read the document',
   'file.extractSuccess': 'Data extracted successfully',
@@ -330,6 +337,10 @@ const tr: Record<TranslationKey, string> = {
   'common.system': 'Sistem',
   'common.toggleTheme': 'Temayı değiştir',
   'common.language': 'Dil',
+  'common.close': 'Kapat',
+  'common.toggleSidebar': 'Kenar çubuğunu aç/kapat',
+  'common.somethingWentWrong': 'Bir şeyler ters gitti!',
+  'common.contentNotFound': 'İçerik bulunamadı.',
 
   // AI Bot page
   'aiBot.newChat': 'Yeni sohbet',
@@ -406,6 +417,9 @@ const tr: Record<TranslationKey, string> = {
   'file.open': 'Aç',
   'file.download': 'İndir',
   'file.csvName': 'ayiklanan-bilgiler',
+  'file.uploadFailed': 'Dosya yüklenemedi',
+  'file.updateFailed': 'Dosya güncellenemedi',
+  'file.deleteFailed': 'Dosya silinemedi',
   'file.readSuccess': 'Metin okundu',
   'file.readFailed': 'Belge okunamadı',
   'file.extractSuccess': 'Bilgiler ayıklandı',

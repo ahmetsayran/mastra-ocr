@@ -52,13 +52,22 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       });
 
       if (response.error) {
-        throw new Error('Failed to create file library asset');
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : t('file.uploadFailed');
+        throw new Error(errorMessage);
       }
 
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to create file library asset:', error);
+      toast.error(error instanceof Error ? error.message : t('file.uploadFailed'));
     },
   });
 
@@ -71,7 +80,12 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       const response = await api['file-library-assets']({ uuid }).put(data);
 
       if (response.error) {
-        throw new Error('Failed to update file library asset');
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : t('file.updateFailed');
+        throw new Error(errorMessage);
       }
 
       return response.data;
@@ -79,6 +93,10 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.detail(variables.uuid) });
+    },
+    onError: (error) => {
+      console.error('Failed to update file library asset:', error);
+      toast.error(error instanceof Error ? error.message : t('file.updateFailed'));
     },
   });
 
@@ -90,13 +108,22 @@ export function useFileLibraryAssets(filters?: FileLibraryAssetIndexQuery) {
       const response = await api['file-library-assets']({ uuid }).delete();
 
       if (response.error) {
-        throw new Error('Failed to delete file library asset');
+        const errorValue = response.error.value;
+        const errorMessage =
+          typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue
+            ? String(errorValue.message)
+            : t('file.deleteFailed');
+        throw new Error(errorMessage);
       }
 
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: fileLibraryAssetKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to delete file library asset:', error);
+      toast.error(error instanceof Error ? error.message : t('file.deleteFailed'));
     },
   });
 

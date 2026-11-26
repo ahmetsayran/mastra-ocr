@@ -308,13 +308,13 @@ export function FileViewModal({
             <div>
               <p className="text-muted-foreground">{t('file.type')}</p>
               <Badge variant="outline" className="mt-1">
-                {asset.type.replace(/_/g, ' ')}
+                {t(`assetType.${asset.type}`)}
               </Badge>
             </div>
             <div>
               <p className="text-muted-foreground">{t('file.fileType')}</p>
               <Badge variant="secondary" className={`mt-1 ${getFileTypeBadgeVariant(asset.fileType)}`}>
-                {asset.fileType}
+                {t(`fileType.${asset.fileType}`)}
               </Badge>
             </div>
             <div>

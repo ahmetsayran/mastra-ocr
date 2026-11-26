@@ -150,7 +150,7 @@ export function useAiBot(threadId?: string) {
         title: file.name,
       });
     } catch {
-      // The error toast comes from the global mutation onError handler
+      // The error toast comes from the create mutation's onError handler
       return;
     }
     attachMutation.mutate({ assetUuid: asset.uuid, title: file.name });

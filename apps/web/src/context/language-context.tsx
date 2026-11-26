@@ -9,13 +9,16 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+const getSavedLanguage = (): Language => {
+  const savedLanguage = localStorage.getItem('language');
+  return languages.includes(savedLanguage as Language) ? (savedLanguage as Language) : languages[0];
+};
+
+// Translates outside React components (e.g. the global query and mutation error handlers)
+export const translate = (key: TranslationKey) => translations[getSavedLanguage()][key];
+
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, _setLanguage] = useState<Language>(() => {
-    const savedLanguage = localStorage.getItem('language');
-    return languages.includes(savedLanguage as Language)
-      ? (savedLanguage as Language)
-      : languages[0];
-  });
+  const [language, _setLanguage] = useState<Language>(getSavedLanguage);
 
   useEffect(() => {
     document.documentElement.lang = language;
