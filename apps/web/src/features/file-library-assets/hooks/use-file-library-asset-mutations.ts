@@ -1,6 +1,6 @@
 import { useLanguage } from '#/context/language-context';
 import { api } from '#/lib/api';
-import { FileLibraryAssetType } from '@onlyjs/db/client';
+import type { FileLibraryAssetType } from '@onlyjs/db/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fileLibraryAssetKeys } from '../queries/file-library-asset-queries';
