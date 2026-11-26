@@ -44,7 +44,8 @@ export const FILE_LIBRARY_ASSET_OCR_PDF_RENDER_SCALE = 2;
 export const FILE_LIBRARY_ASSET_OCR_READ_PROMPT = 'Bu görseldeki tüm metni oku ve aynen yaz.';
 
 export const FILE_LIBRARY_ASSET_OCR_SUMMARY_PROMPT =
-  'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz.';
+  'Bu belgeyi Türkçe olarak 3-5 cümleyle özetle. Belgenin türünü, kimden kime olduğunu ve önemli tutar, tarih ve bilgileri yaz. ' +
+  'Düz metin yaz; kalın yazı, başlık veya madde işareti kullanma.';
 
 export const FILE_LIBRARY_ASSET_OCR_DOCUMENT_TYPES = [
   'invoice',
@@ -124,8 +125,13 @@ export const FILE_LIBRARY_ASSET_OCR_EXTRACTORS = {
     schema: z.object({
       contractTitle: z.string().nullable().describe('Sözleşmenin adı veya türü'),
       parties: z
-        .array(z.string())
-        .describe('Sözleşmenin tarafları, rolü ve adıyla (örnek: "Kiracı: Ali Yılmaz")'),
+        .array(
+          z.object({
+            role: z.string().describe('Tarafın sözleşmedeki rolü, örnek: Kiracı'),
+            name: z.string().describe('Tarafın adı veya unvanı'),
+          }),
+        )
+        .describe('Sözleşmenin tarafları'),
       startDate: isoDate('Başlangıç tarihi'),
       endDate: isoDate('Bitiş tarihi'),
       amount: z.number().nonnegative().nullable().describe('Sözleşme bedeli veya dönemlik ödeme'),

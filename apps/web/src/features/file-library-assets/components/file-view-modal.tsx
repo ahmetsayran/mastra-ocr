@@ -38,6 +38,7 @@ import {
   RotateCw,
   ScanText,
 } from 'lucide-react';
+import { formatListItem } from '../utils/extraction-helpers';
 import { type ExtractionField, ExtractionForm } from './extraction-form';
 
 interface FileViewModalProps {
@@ -78,7 +79,7 @@ const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, ExtractionField
   ],
   contract: [
     { key: 'contractTitle', label: 'field.contract', kind: 'text' },
-    { key: 'parties', label: 'field.parties', kind: 'list' },
+    { key: 'parties', label: 'field.parties', kind: 'parties' },
     { key: 'startDate', label: 'field.startDate', kind: 'date' },
     { key: 'endDate', label: 'field.endDate', kind: 'date' },
     { key: 'amount', label: 'field.amount', kind: 'number' },
@@ -105,7 +106,7 @@ const EXTRACTION_FIELDS: Record<FileLibraryAssetOcrDocumentType, ExtractionField
 function formatExtractionValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+  if (Array.isArray(value)) return value.length ? value.map(formatListItem).join(', ') : '—';
   return String(value);
 }
 

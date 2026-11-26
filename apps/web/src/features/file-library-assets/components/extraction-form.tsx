@@ -6,11 +6,12 @@ import type { TranslationKey } from '#/config/translations';
 import { useLanguage } from '#/context/language-context';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
+import { formatListItem, parseParty } from '../utils/extraction-helpers';
 
 export type ExtractionField = {
   key: string;
   label: TranslationKey;
-  kind: 'text' | 'number' | 'date' | 'list';
+  kind: 'text' | 'number' | 'date' | 'list' | 'parties';
 };
 
 type LineItemValues = { description: string; quantity: string; unitPrice: string; total: string };
@@ -25,11 +26,11 @@ interface ExtractionFormProps {
   isSaving?: boolean;
 }
 
-// Form inputs hold strings; the API expects numbers, ISO dates, lists or null
+// Form inputs hold strings; the API expects numbers, ISO dates, lists, contract parties or null
 function toInputValue(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (Array.isArray(value)) return value.join('\n');
+  if (Array.isArray(value)) return value.map(formatListItem).join('\n');
   return String(value);
 }
 
@@ -38,11 +39,12 @@ function toNumber(value: string): number | null {
 }
 
 function fromInputValue(value: string, kind: ExtractionField['kind']): unknown {
-  if (kind === 'list') {
-    return value
+  if (kind === 'list' || kind === 'parties') {
+    const lines = value
       .split('\n')
       .map((line) => line.trim())
       .filter(Boolean);
+    return kind === 'parties' ? lines.map(parseParty) : lines;
   }
   if (value.trim() === '') return null;
   return kind === 'number' ? Number(value) : value.trim();
@@ -106,11 +108,23 @@ export function ExtractionForm({
               control={form.control}
               name={`fields.${field.key}`}
               render={({ field: input }) => (
-                <FormItem className={field.kind === 'list' ? 'col-span-2' : undefined}>
+                <FormItem
+                  className={
+                    field.kind === 'list' || field.kind === 'parties' ? 'col-span-2' : undefined
+                  }
+                >
                   <FormLabel>{t(field.label)}</FormLabel>
                   <FormControl>
-                    {field.kind === 'list' ? (
-                      <Textarea {...input} rows={3} placeholder={t('field.listPlaceholder')} />
+                    {field.kind === 'list' || field.kind === 'parties' ? (
+                      <Textarea
+                        {...input}
+                        rows={3}
+                        placeholder={t(
+                          field.kind === 'parties'
+                            ? 'field.partiesPlaceholder'
+                            : 'field.listPlaceholder',
+                        )}
+                      />
                     ) : (
                       <Input
                         {...input}
