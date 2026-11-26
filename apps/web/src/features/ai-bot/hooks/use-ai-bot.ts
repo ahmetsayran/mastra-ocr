@@ -1,6 +1,6 @@
 import { env } from '#/config/env';
 import { useLanguage } from '#/context/language-context';
-import { useFileLibraryAssets } from '#/features/file-library-assets';
+import { useFileLibraryAssetMutations } from '#/features/file-library-assets';
 import { api } from '#/lib/api';
 import { FileLibraryAssetType } from '@onlyjs/db/enums';
 import { useNavigate } from '@tanstack/react-router';
@@ -57,7 +57,7 @@ export function useAiBot(threadId?: string) {
   const { t } = useLanguage();
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [streamedReply, setStreamedReply] = useState('');
-  const { createFileLibraryAsset, isCreating } = useFileLibraryAssets();
+  const { createFileLibraryAsset, isCreating } = useFileLibraryAssetMutations();
 
   // A new chat whose first message or document failed has nothing in it, so it is removed from the records
   const removeEmptyThread = async (uuid: string) => {
