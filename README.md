@@ -1,6 +1,6 @@
 # 🚀 Mastra OCR — Proje Başlangıç Rehberi
 
-Bu proje, belgeleri (fatura, fiş, form, rapor gibi) yapay zekâ ile okuyan ve analiz eden bir **OCR** (belgeden yazı okuma) uygulamasıdır. Tek bir sayfada (**AI Bot**) yapay zekâyla sohbet edebilir, görsel veya PDF belge yükleyebilir, belgenin yazısını okutabilir, fatura bilgilerini ayıklatabilir, belgeyi özetletebilir ve yüklediğiniz belgeler hakkında soru sorabilirsiniz. Yaptığınız her şey sol taraftaki **Records** listesinde görünür.
+Bu proje, belgeleri (fatura, fiş, form, rapor gibi) yapay zekâ ile okuyan ve analiz eden bir **OCR** (belgeden yazı okuma) uygulamasıdır. Tek bir sayfada (**AI Bot**) yapay zekâyla sohbet edebilir, görsel veya PDF belge yükleyebilir, belgenin yazısını okutabilir, belgenin türünü (fatura, fiş, sözleşme, kimlik) tanıtıp bilgilerini ayıklatabilir, ayıklanan bilgileri kontrol edip düzeltebilir, CSV olarak indirebilir, belgeyi özetletebilir ve yüklediğiniz belgeler hakkında soru sorabilirsiniz. Yaptığınız her şey sol taraftaki **Records** listesinde görünür.
 
 Proje hazır bir altyapının (boilerplate) üzerine kurulmuştur: giriş, yetki, dosya kütüphanesi, işlem kayıtları ve panel bu altyapıdan gelir; yapay zekâ özellikleri bunların üzerine eklenmiştir.
 
@@ -17,16 +17,27 @@ Proje aşama aşama geliştirildi. Her aşama bittiğinde bu liste güncellenir.
 2. **Yapay zekâ bağlantısı:** Mastra ile bir OCR ajanı kuruldu. Model: NVIDIA Nemotron 3.5 Super VL (OpenRouter üzerinden, ücretsiz).
 3. **Belge yükleme:** Dosya kütüphanesine yeni bir belge türü (`OCR_DOCUMENT`) eklendi. Belgeler kalıcı olarak kaydediliyor.
 4. **Belge okuma (Read Text):** Belgedeki yazı okunup aynı kayda ekleniyor.
-5. **Bilgi ayıklama (Extract Data):** Faturadan fatura no, tarih, satıcı, alıcı, ara toplam, KDV, genel toplam ve para birimi ayrı ayrı alınıp düzenli veri (JSON) olarak kaydediliyor.
-6. **Sohbet:** Yapay zekâyla sohbet edilebiliyor; sohbetler ve mesajlar kaydediliyor. Cevap ekranda yazılıyormuş gibi kelime kelime geliyor.
+5. **Bilgi ayıklama (Extract Data):** Belgedeki bilgiler ayrı ayrı alınıp düzenli veri (JSON) olarak kaydediliyor.
+6. **Sohbet:** Yapay zekâyla sohbet edilebiliyor; sohbetler ve mesajlar kaydediliyor. Cevap, yapay zekâ yazdıkça ekranda parça parça beliriyor.
 7. **Belgeler hakkında soru sorma (RAG):** Yüklenen belgeler parçalara bölünüp aranabilir hale getiriliyor; sohbette sorulan soruya belgelerdeki ilgili bölümlerle cevap veriliyor.
 8. **Güvenlik kontrolleri:** Sohbete yazılan "önceki talimatları yok say" gibi saldırı cümleleri engelleniyor; cevaplarda anahtar ve şifre benzeri bilgiler gizleniyor.
 9. **Yapay zekâ araçları:** Yapay zekâ sohbet içinde gönderi yorumlarını listeleyip ekleyebiliyor, güncelleyip silebiliyor; belgeleri listeleyip özetleyebiliyor. Her işlem kullanıcının yetkisine göre yapılıyor ve işlem kaydına yazılıyor.
 10. **Belge özeti (Summarize):** Belgenin 3-5 cümlelik Türkçe özeti çıkarılıp kayda yazılıyor. Aynı belge tekrar istenirse kayıttaki özet kullanılıyor.
 11. **PDF desteği:** Yazılı PDF'lerin yazısı yapay zekâ kullanmadan okunuyor. Taranmış (yazısı resim olan) PDF'lerin sayfaları görsele çevrilip yapay zekâya okutuluyor.
 12. **AI Bot sayfası:** Sohbet, belge yükleme ve belge analizi tek sayfada. Sol menüde sohbetler ve belgeler (**Records**), her kayıtta yeniden adlandırma ve silme menüsü var. Koyu ve açık tema, telefon görünümü destekleniyor.
+13. **Sohbete belge ekleme:** Sohbette eklenen belge mesajların arasında kart olarak görünüyor. Sohbete belge eklendiyse sorular o belgelerde aranıyor.
+14. **Kayıtlarda arama:** Records listesinin üstündeki kutuyla sohbet ve belge adlarında arama yapılabiliyor (Türkçe harflerle de çalışır). Liste uzunsa **Show more** ile devamı açılıyor.
+15. **PDF önizleme:** Belge penceresinde PDF'in kendisi görüntüleniyor.
+16. **Belge türünü tanıma:** Bilgi ayıklamadan önce belgenin türü belirleniyor (fatura, fiş, sözleşme, kimlik, diğer) ve her türün kendi bilgileri ayıklanıyor.
+17. **Kalem satırları:** Fatura ve fişlerdeki ürün/hizmet satırları (açıklama, adet, birim fiyat, tutar) tablo olarak ayıklanıyor.
+18. **Doğrulama:** Ayıklanan bilgiler kontrol ediliyor (toplam = ara toplam + KDV, kalem toplamları, tarihler, T.C. kimlik numarası, son geçerlilik tarihi). Sorun varsa uyarı olarak gösteriliyor.
+19. **Elle düzeltme:** Ayıklanan bilgiler bir formla düzeltilip kaydedilebiliyor; kaydedince kontroller yeniden yapılıyor.
+20. **CSV indirme:** Ayıklanan bilgiler Excel'de doğru açılan bir CSV dosyası olarak indirilebiliyor.
+21. **Uzun belge koruması:** Çok uzun belgeler model sınırını aşmayacak şekilde parça parça işleniyor.
+22. **Dil seçimi:** Panel Türkçe veya İngilizce kullanılabiliyor.
+23. **Otomatik testler:** Metin bölme, yapay zekâ hata mesajları ve doğrulama kuralları için testler var.
 
-**💡 İleride eklenebilecekler:** belge türünü otomatik tanıma (fatura, fiş, kimlik), ayıklanan bilgiyi doğrulama (toplam = ara toplam + KDV), sonucu elle düzeltebilme ekranı, belge şablonları, tablo ve kalem satırlarını ayıklama, toplu belge yükleme, sonuçları Excel/CSV olarak indirme, sohbet içinde belge önizlemesi.
+**💡 İleride eklenebilecekler:** belge şablonları, toplu belge yükleme, sohbet içinde belge önizlemesi.
 
 ---
 
@@ -141,16 +152,22 @@ bun run mastra:dev
 
 Her şey tek sayfada yapılır:
 
-1. **Sohbet başlatın:** Alttaki kutuya bir soru yazıp gönderin. İlk mesajla yeni bir sohbet oluşur; başlığı mesajın ilk 50 karakteridir. Sol üstteki **New chat** ile yeni bir sohbete başlayabilirsiniz.
-2. **Belge ekleyin:** Mesaj kutusunun solundaki 📎 (ataş) butonuyla bir görsel veya PDF seçin. Belge kaydedilir ve arka planda okunup aranabilir hale gelir. Birkaç saniye sonra onunla ilgili soru sorabilirsiniz (örnek: *"Faturadaki genel toplam nedir?"*, *"Son eklediğim belgeyi özetle"*).
-3. **Belgeyi analiz edin:** Sol menüdeki **Records** listesinde belgeye tıklayın. Açılan pencerede:
+1. **Sohbet başlatın:** Alttaki kutuya bir soru yazıp gönderin. İlk mesajla yeni bir sohbet oluşur; başlığı mesajın ilk 50 karakteridir. Sol üstteki **New chat** ile yeni bir sohbete başlayabilirsiniz. Yapay zekâ önceki mesajları hatırlar (son 20 mesaj).
+2. **Belge ekleyin:** Mesaj kutusunun solundaki 📎 (ataş) butonuyla bir görsel veya PDF seçin. Belge kaydedilir ve arka planda okunup aranabilir hale gelir. Birkaç saniye sonra onunla ilgili soru sorabilirsiniz (örnek: *"Faturadaki genel toplam nedir?"*, *"Bu belgeyi özetle"*).
+   Eklenen belge sohbette bir kart olarak görünür. Sohbete belge eklediyseniz sorularınız o belgelerde aranır; hiç belge eklemediyseniz yüklediğiniz tüm belgelerde aranır.
+3. **Belgeyi analiz edin:** Sol menüdeki **Records** listesinde belgeye tıklayın. Açılan pencerenin üstünde belgenin önizlemesi (görsel veya PDF) görünür. Alttaki butonlar:
    - **Read Text** — belgedeki yazıyı okur,
-   - **Extract Data** — fatura bilgilerini tek tek ayıklar,
+   - **Extract Data** — belgenin türünü belirler ve o türün bilgilerini tek tek ayıklar (fatura ve fişlerde kalem satırlarını da tablo olarak çıkarır),
    - **Summarize** — belgenin kısa özetini çıkarır,
    - **Open / Download** — dosyayı açar veya indirir.
    Sonuçlar aynı pencerede ilgili başlığın altında görünür ve kaydedilir; pencereyi kapatıp açsanız da kaybolmaz.
-4. **Kayıtları yönetin:** Records'ta bir kaydın üzerine gelince sağında **⋯** belirir. Sohbetleri **Rename** ile yeniden adlandırabilir, **Delete** ile silebilirsiniz. Belgelerde ayrıca **View** vardır.
-5. **Görünüm:** Sağ üstteki ay/güneş simgesiyle koyu ve açık tema arasında geçiş yapabilirsiniz. Sol menünün kenarını sürükleyerek genişliğini ayarlayabilirsiniz.
+4. **Ayıklanan bilgileri kontrol edin:** **Extracted Data** başlığının altında kontrol sonucu görünür: her şey tutuyorsa yeşil **All checks passed**, tutmayan bir şey varsa sarı uyarılar (örnek: *"Subtotal + VAT is 18600, but the total is 18000"*).
+   - **Edit** — bilgileri bir formda düzeltip **Save Changes** ile kaydedersiniz; kontroller yeniden yapılır. Kalem satırı ekleyip silebilirsiniz.
+   - **CSV** — ayıklanan bilgileri ve kalem satırlarını Excel'de açılabilen bir dosya olarak indirir.
+5. **Kayıtları yönetin:** Records'ta bir kaydın üzerine gelince sağında **⋯** belirir. Sohbetleri **Rename** ile yeniden adlandırabilir, **Delete** ile silebilirsiniz. Belgelerde ayrıca **View** vardır. Listenin üstündeki arama kutusuyla adlarda arama yapabilir, liste uzunsa en alttaki **Show more** ile devamını açabilirsiniz.
+6. **Görünüm ve dil:** Sağ üstteki ay/güneş simgesiyle koyu ve açık tema arasında geçiş yapabilirsiniz. Yanındaki dil simgesinden **English** veya **Türkçe** seçebilirsiniz; seçiminiz hatırlanır. Sol menünün kenarını sürükleyerek genişliğini ayarlayabilirsiniz.
+
+> 🌐 Bu rehberdeki buton adları İngilizce görünüme göredir. Türkçe görünümde karşılıkları: **Records** → Kayıtlar, **New chat** → Yeni sohbet, **Show more** → Daha fazla göster, **Read Text** → Metni Oku, **Extract Data** → Bilgileri Ayıkla, **Summarize** → Özetle, **Edit** → Düzenle, **Rename** → Yeniden adlandır, **Delete** → Sil.
 
 Belgeler ayrıca **Dosya Kütüphanesi** sayfasında (`http://localhost:5173/file-library`) tablo halinde görülebilir. Yapılan her işlem (kim, ne zaman, ne yaptı) **işlem kayıtları** sayfasında (`http://localhost:5173/audit-logs`) listelenir.
 
@@ -166,14 +183,20 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 2) Belgeyi okut     → POST /file-library-assets/{uuid}/ocr
                       belgedeki yazı okunur, aynı kayda eklenir
 3) Bilgi ayıkla     → POST /file-library-assets/{uuid}/extract
-                      fatura bilgileri tek tek ayıklanır, aynı kayda eklenir
+                      belgenin türü belirlenir, o türün bilgileri ayıklanır,
+                      kontrol edilir ve aynı kayda eklenir
+   Elle düzelt      → PUT  /file-library-assets/{uuid}/extraction
+                      düzeltilen bilgiler kaydedilir, kontroller yeniden yapılır
 4) Özet çıkar       → POST /file-library-assets/{uuid}/summary
                       belgenin kısa özeti çıkarılır, aynı kayda eklenir
-5) Soru sor         → POST /threads/{uuid}/messages
-                      soruya, belgelerdeki ilgili bölümlerle cevap verilir
+5) Sohbete ekle     → POST /threads/{uuid}/attachments
+                      belge sohbete eklenir, o sohbetteki sorular bu belgede aranır
+6) Soru sor         → POST /threads/{uuid}/messages
+                      soruya, belgelerdeki ilgili bölümlerle cevap verilir;
+                      cevap yazıldıkça parça parça gelir
 ```
 
-2., 3. ve 4. adım birbirinden bağımsızdır; istediğiniz sırayla, istediğiniz kadar çalıştırabilirsiniz. Biri diğerinin sonucunu silmez.
+2., 3. ve 4. adım birbirinden bağımsızdır; istediğiniz sırayla, istediğiniz kadar çalıştırabilirsiniz. Biri diğerinin sonucunu silmez. Belgenin türü ilk ayıklamada belirlenir ve sonraki ayıklamalarda yeniden sorulmaz.
 
 **Dosya türüne göre okuma:**
 
@@ -183,7 +206,31 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 | Yazılı PDF (bilgisayarda oluşturulmuş) | Yazı doğrudan PDF'ten okunur | Hayır |
 | Taranmış PDF (yazısı resim olan) | Her sayfa görsele çevrilip yapay zekâya okutulur | Evet, sayfa başına 1 istek |
 
-**Ayıklanan fatura bilgileri:** fatura no, tarih, satıcı, alıcı, ara toplam (KDV hariç), KDV, genel toplam, para birimi. Belgede yazmayan bilgi boş bırakılır. Tutarlar düz sayı (`1.440,00 TL` → `1440`), tarih `YYYY-MM-DD` biçiminde kaydedilir.
+**Belge türüne göre ayıklanan bilgiler:**
+
+| Belge türü | Ayıklanan bilgiler |
+|---|---|
+| Fatura | fatura no, tarih, satıcı, alıcı, ara toplam (KDV hariç), KDV, genel toplam, para birimi, kalem satırları |
+| Fiş / makbuz | mağaza, tarih, KDV, toplam, ödeme şekli, para birimi, kalem satırları |
+| Sözleşme | sözleşme adı, taraflar, başlangıç ve bitiş tarihi, tutar, para birimi, ödeme koşulları |
+| Kimlik (kimlik kartı, ehliyet, pasaport) | ad soyad, kimlik no, doğum tarihi, uyruk, belge no, son geçerlilik tarihi |
+| Diğer | başlık, tarih, düzenleyen, en önemli bilgiler (en fazla 5) |
+
+Kalem satırlarında her satırın açıklaması, adedi, birim fiyatı ve tutarı ayrı ayrı alınır. Belgede yazmayan bilgi boş bırakılır. Tutarlar düz sayı (`1.440,00 TL` → `1440`), tarih `YYYY-MM-DD`, para birimi kod olarak (`TL` → `TRY`) kaydedilir.
+
+**Yapılan kontroller:**
+
+| Belge türü | Kontrol |
+|---|---|
+| Fatura | ara toplam + KDV = genel toplam; kalem tutarlarının toplamı = ara toplam; her satırda adet × birim fiyat = tutar; tarih geçerli ve ileri bir tarih değil |
+| Fiş | kalem tutarlarının toplamı = toplam; her satırda adet × birim fiyat = tutar; tarih geçerli ve ileri bir tarih değil |
+| Sözleşme | tarihler geçerli; bitiş tarihi başlangıçtan önce değil |
+| Kimlik | T.C. kimlik numarası kurallara uygun; doğum tarihi ileri bir tarih değil; belgenin süresi dolmamış |
+| Diğer | tarih geçerli |
+
+Belgelerdeki yuvarlamalar yüzünden 0,05'e kadar olan tutar farkları sorun sayılmaz. Kontroller sadece uyarıdır; bilgilerin kaydedilmesini engellemez.
+
+**Uzun belgeler:** 20.000 karakterden uzun yazılı belgelerde özet önce her bölüm için ayrı ayrı çıkarılır, sonra bu bölüm özetleri birleştirilir. Bilgi ayıklamada belgenin başı ve sonu (başlık ve toplamların olduğu yerler) kullanılır. Belgeler aranabilir hale getirilirken parçalar 50'şer 50'şer işlenir.
 
 - **Kabul edilen dosyalar:** JPEG, PNG, WEBP ve PDF (en fazla 10 MB). Taranmış PDF'ler en fazla 5 sayfa olabilir.
 - **Kayıtlar kalıcıdır:** Sayfayı kapatıp açsanız da yüklenen belgeler, sohbetler ve sonuçlar silinmez.
@@ -197,7 +244,7 @@ Belge yükleme ve kaydetme işini projenin hazır **dosya kütüphanesi** yapar;
 ## 🔍 6. Neler Yapabilirsiniz? (Analiz Örnekleri)
 
 - **Belgeden yazı çıkarma:** Fatura, fiş, sözleşme veya taranmış bir sayfanın yazısını dijital metne çevirin.
-- **Fatura verisi ayıklama:** Birden çok faturanın tutarlarını, tarihlerini ve firma adlarını düzenli veri olarak toplayın.
+- **Belge verisi ayıklama:** Fatura, fiş, sözleşme ve kimliklerden tutarları, tarihleri, firma ve kişi adlarını düzenli veri olarak toplayın; kontrol uyarılarına bakıp gerekirse düzeltin ve CSV olarak indirin.
 - **Özet çıkarma:** Uzun bir raporun veya sözleşmenin birkaç cümlelik özetini alın.
 - **Belgeler üzerinde soru-cevap:** *"Bu ayki faturalarda en yüksek tutar hangisi?"*, *"Sözleşmede ödeme süresi kaç gün?"* gibi sorular sorun; cevap yüklediğiniz belgelerden gelir.
 - **Sohbetle işlem yaptırma:** *"Şu gönderinin yorumlarını listele"*, *"Son yüklediğim belgeyi özetle"* gibi isteklerde yapay zekâ ilgili aracı kendisi kullanır.
@@ -213,6 +260,8 @@ Proje, hazır altyapının kurallarına göre yazılmıştır. Yeni bir özellik
 - **Yapay zekâ parçaları:** Ajan, araçlar, güvenlik kontrolleri ve embedding modeli `apps/api/src/mastra/` klasöründedir. Yeni bir araç eklerseniz `mastra/tools/` altına yazıp `mastra/agents/ocr-agent.ts` içinde ajana tanıtın.
 - **Veritabanı değişikliği:** `packages/database/schema.prisma` dosyasını düzenleyip `packages/database` klasöründe `bun run prisma migrate dev` çalıştırın.
 - **Panelde yeni bir sayfa veya bileşen:** `apps/web/src/features/` altında `pages`, `hooks`, `queries`, `components` klasörleriyle bir özellik klasörü açın; sayfanın adresini `apps/web/src/routes/` altına ekleyin.
+- **Panel yazıları (Türkçe/İngilizce):** Ekrandaki yazılar `apps/web/src/config/translations.ts` dosyasındadır. Yeni bir yazıyı önce `en` bölümüne, sonra aynı adla `tr` bölümüne ekleyin; bileşende `useLanguage()` ile gelen `t('anahtar')` ile kullanın.
+- **Testleri çalıştırmak:** `apps/api` klasöründe `bun run test` yazın. Test dosyaları test ettikleri dosyanın yanında, `.test.ts` uzantısıyla durur.
 - **API değiştikten sonra:** Panelin API tiplerini güncellemek için `packages/eden` klasöründe `bun run prepare-types` çalıştırın.
 
 ---
@@ -221,8 +270,11 @@ Proje, hazır altyapının kurallarına göre yazılmıştır. Yeni bir özellik
 
 - **Ücretsiz modelin günlük sınırı vardır.** Sınır dolunca yapay zekâ özellikleri (okuma, ayıklama, özet, sohbet) bir süre çalışmaz; ekranda *"Yapay zekâ servisi şu an yoğun"* uyarısı çıkar. Sınır günlük olarak sıfırlanır. Yazılı PDF'lerin okunması bu sınırı harcamaz.
 - **Taranmış PDF'ler en fazla 5 sayfa olabilir.** Her sayfa bir yapay zekâ isteği harcar.
-- **Records listesi** son 20 sohbeti ve son 20 dosyayı gösterir.
-- **Cevap akışı:** Yapay zekânın cevabı önce tamamen hazırlanır, sonra ekranda kelime kelime gösterilir.
+- **Records listesi** önce son 20 sohbeti ve son 20 belgeyi gösterir; **Show more** her basışta 20'şer tane daha açar.
+- **Cevap akışı:** Cevap, yapay zekâ yazdıkça parça parça gelir. Kullanılan model yazmaya başlamadan önce bir süre düşündüğü için ilk kelimenin gelmesi 15-25 saniye sürebilir.
+- **Uzun belgeler daha çok istek harcar:** 20.000 karakterden uzun bir belgenin özeti her 20.000 karakterlik bölüm için 1 istek, birleştirmek için de 1 istek harcar.
+- **Elle düzeltme** sadece bilgileri ayıklanmış belgelerde yapılabilir.
+- **Dil seçimi** panel yazılarını değiştirir. Yapay zekâ, soruyu hangi dilde yazdıysanız o dilde cevap verir. Sunucudan gelen hata mesajları Türkçedir.
 
 ---
 
@@ -266,6 +318,15 @@ pgvector eklentisi kurulu değil. Ön Gereksinimler bölümündeki 3. adımı ya
 
 ### 💡 "Yapay zekâ servisine bağlanılamadı, OpenRouter anahtarını kontrol edin"
 `config/apps/api/.env` dosyasındaki `OPENROUTER_API_KEY` boş veya hatalıdır. Adım 5'i tekrar yapın ve projeyi yeniden başlatın.
+
+### 💡 "Mesaj güvenlik kontrolüne takıldı"
+Mesajınız güvenlik kurallarına takıldı: "önceki talimatları yok say", "sistem talimatı" gibi ifadeler veya anahtar/şifre benzeri bilgiler içeriyor. Sorunuzu bunlar olmadan yeniden yazın.
+
+### 💡 "Önce belgedeki bilgileri ayıklayın"
+Elle düzeltme için önce **Extract Data** ile belgenin bilgilerini ayıklatın.
+
+### 💡 "Ayıklanan bilgiler geçersiz"
+Düzeltme formunda bir alan uygun biçimde değil. Örneğin para birimi 3 harfli kod olmalıdır (`TL` yerine `TRY` yazın) ve tutarlar eksi olamaz. Alanları kontrol edip tekrar kaydedin.
 
 ### 💡 "Taranmış PDF en fazla 5 sayfa olabilir"
 Yazısı resim olan PDF'ler sayfa sayfa okunur. Belgeyi 5 sayfalık parçalara bölüp ayrı ayrı yükleyin.
