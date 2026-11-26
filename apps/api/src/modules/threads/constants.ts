@@ -1,6 +1,3 @@
-// Delay between streamed words so the buffered answer appears as typing
-export const CHAT_STREAM_CHUNK_DELAY_MS = 20;
-
 // Number of earlier messages sent to the agent so it remembers the conversation
 export const CHAT_HISTORY_LIMIT = 20;
 

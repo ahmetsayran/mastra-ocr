@@ -2,12 +2,13 @@ import prisma from '@onlyjs/db';
 import { ChatMessageRole, FileLibraryAssetType, Prisma } from '@onlyjs/db/client';
 import { PrismaClientKnownRequestError } from '@onlyjs/db/client/runtime/library';
 import { RequestContext } from '@mastra/core/request-context';
+import type { ReadableStreamDefaultReader } from 'stream/web';
 import { mastra } from '../../mastra';
 import { chatInputProcessors, chatOutputProcessors } from '../../mastra/processors/chat-guardrails';
 import { NotFoundException, UnprocessableEntityException } from '../../utils';
 import { toAgentHttpError } from '../../utils/agent-errors';
 import { PaginationService } from '../../utils/pagination';
-import { CHAT_HISTORY_LIMIT, CHAT_STREAM_CHUNK_DELAY_MS } from './constants';
+import { CHAT_HISTORY_LIMIT } from './constants';
 import { FileLibraryAssetsService } from '../file-library-assets';
 import { RagService } from '../file-library-assets/services/rag.service';
 import type {
@@ -147,7 +148,7 @@ export abstract class ThreadsService {
     }
   }
 
-  private static async generate(
+  private static async startStream(
     content: string,
     userId: string,
     history: {
@@ -180,41 +181,71 @@ export abstract class ThreadsService {
       }
 
       const agent = mastra.getAgent('ocrAgent');
-      const result = await agent.generate(content, {
+      return await agent.stream(content, {
         context,
         requestContext: new RequestContext([['userId', userId]]),
         inputProcessors: chatInputProcessors,
         outputProcessors: chatOutputProcessors,
       });
-
-      if (result.tripwire) {
-        throw new UnprocessableEntityException('Mesaj güvenlik kontrolüne takıldı');
-      }
-      return result.text;
     } catch (error) {
       throw toAgentHttpError(
         error,
-        'ThreadsService.generate',
+        'ThreadsService.startStream',
         'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
       );
     }
   }
 
-  // Streams the buffered answer word by word so it appears as typing
-  static async *streamWords(text: string) {
-    for (const chunk of text.match(/\S+\s*/g) ?? []) {
-      yield chunk;
-      await Bun.sleep(CHAT_STREAM_CHUNK_DELAY_MS);
+  private static async readChunk(reader: ReadableStreamDefaultReader<string>) {
+    try {
+      return await reader.read();
+    } catch (error) {
+      throw toAgentHttpError(
+        error,
+        'ThreadsService.readChunk',
+        'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
+      );
     }
   }
 
+  private static async *streamAnswer(
+    threadId: number,
+    content: string,
+    firstChunk: string,
+    reader: ReadableStreamDefaultReader<string>,
+  ) {
+    let text = firstChunk;
+    yield firstChunk;
+
+    for (;;) {
+      const { done, value } = await this.readChunk(reader);
+      if (done) break;
+      text += value;
+      yield value;
+    }
+
+    await this.addMessage(threadId, ChatMessageRole.USER, content);
+    await this.addMessage(threadId, ChatMessageRole.ASSISTANT, text);
+  }
+
+  // Waiting for the first chunk turns guardrail and model errors into HTTP errors before streaming starts
   static async reply(uuid: string, payload: ThreadMessagePayload, resourceId: string) {
     const thread = await this.show(uuid, resourceId);
+    const stream = await this.startStream(payload.content, resourceId, thread.messages);
+    const reader = stream.textStream.getReader();
 
-    const text = await this.generate(payload.content, resourceId, thread.messages);
-    await this.addMessage(thread.id, ChatMessageRole.USER, payload.content);
-    await this.addMessage(thread.id, ChatMessageRole.ASSISTANT, text);
+    const first = await this.readChunk(reader);
+    if (first.done) {
+      if (stream.tripwire) {
+        throw new UnprocessableEntityException('Mesaj güvenlik kontrolüne takıldı');
+      }
+      throw toAgentHttpError(
+        stream.error,
+        'ThreadsService.reply',
+        'Yapay zekâ servisi cevap veremedi, tekrar deneyin',
+      );
+    }
 
-    return text;
+    return this.streamAnswer(thread.id, payload.content, first.value, reader);
   }
 }

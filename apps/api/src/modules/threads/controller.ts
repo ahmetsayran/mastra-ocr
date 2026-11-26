@@ -115,9 +115,7 @@ const app = new Elysia({ prefix: '/threads', tags: ['Thread'] })
   .post(
     '/:uuid/messages',
     async ({ params, body, user }) => {
-      // Full buffering: the whole answer is ready before streaming starts
-      const text = await ThreadsService.reply(params.uuid, body, user.id);
-      return ThreadsService.streamWords(text);
+      return ThreadsService.reply(params.uuid, body, user.id);
     },
     dtoWithMiddlewares(
       threadMessageDto,
